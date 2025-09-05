@@ -1,0 +1,130 @@
+# ------------------------------------------------------------------------------
+# Workflow: Notify Slack
+# Purpose:
+#   Sends a summary of job statuses to a Slack channel at the end of a CI run.
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - Dynamically builds the Slack payload using Node.js
+#   - Adds ✅, ⏭, ❌ based on each job's result
+#   - Color:
+#       - Green ✅ all jobs passed or skipped
+#       - Red ❌ any job failed
+# ------------------------------------------------------------------------------
+name: Notify Slack
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      setup_status:
+        required: true
+        type: string
+      code_quality_status:
+        required: true
+        type: string
+      security_scan_status:
+        required: true
+        type: string
+      unit_test_status:
+        required: true
+        type: string
+      integration_tests_status:
+        required: true
+        type: string
+      quality_scan_status:
+        required: true
+        type: string
+      publish_status:
+        required: true
+        type: string
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---------------------------
+      # 1. Build Slack Payload (Dynamic JSON)
+      #    - Loops through job statuses and assigns ✅, ⏭, ❌
+      #    - Determines color: green if no failures, red if any failed
+      # ---------------------------
+      - name: Build Slack Payload
+        id: build-payload
+        run: |
+          node <<'EOF'
+          const statuses = {
+            "Setup": process.env.SETUP,
+            "Code Quality": process.env.CODE_QUALITY,
+            "Security Scan": process.env.SECURITY_SCAN,
+            "Unit Tests": process.env.UNIT_TESTS,
+            "Integration Tests": process.env.INTEGRATION_TESTS,
+            "Quality Scan": process.env.QUALITY_SCAN,
+            "Publish": process.env.PUBLISH,
+          };
+
+          // Map each job status to an emoji
+          const fields = Object.entries(statuses).map(([name, status]) => {
+            const emoji =
+              status === "success" ? "✅" :
+              status === "skipped" ? "⏭" :
+              "❌ *FAILED*";
+            return `{ "type": "mrkdwn", "text": "*${name}:*\\n${emoji}" }`;
+          });
+
+          // Determine overall workflow color: red if any failed, green otherwise
+          const anyFailed = Object.values(statuses).some(s => s === "failed");
+          const color = anyFailed ? "#ff0000" : "#36a64f";
+
+          // Build Slack message payload
+          const payload = `{
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*CI Workflow for ${process.env.SERVICE} finished with statuses:*"
+                }
+              },
+              {
+                "type": "section",
+                "fields": [${fields.join(",")}]
+              }
+            ],
+            "attachments": [
+              {
+                "color": "${color}",
+                "text": "Summary for ${process.env.SERVICE}"
+              }
+            ]
+          }`;
+
+          console.log(`payload<<EOF\n${payload}\nEOF`);
+          EOF
+        env:
+          SERVICE: ${{ inputs.service_name }}
+          SETUP: ${{ inputs.setup_status }}
+          CODE_QUALITY: ${{ inputs.code_quality_status }}
+          SECURITY_SCAN: ${{ inputs.security_scan_status }}
+          UNIT_TESTS: ${{ inputs.unit_test_status }}
+          INTEGRATION_TESTS: ${{ inputs.integration_tests_status }}
+          QUALITY_SCAN: ${{ inputs.quality_scan_status }}
+          PUBLISH: ${{ inputs.publish_status }}
+
+      # ---------------------------
+      # 2. Send Slack Notification
+      #    - Posts the JSON payload from step 1 to Slack
+      # ---------------------------
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          payload: ${{ steps.build-payload.outputs.payload }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,0 +1,87 @@
+# ------------------------------------------------------------------------------
+# Workflow: Code Quality
+# Purpose:
+#   Runs Spotless Check and Checkstyle
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - Spotless Check: Ensures Java files follow formatting rules (indentation, braces, imports, whitespace).
+#   - Checkstyle: Ensures Java files follow coding standards and conventions (naming, Javadoc, imports, spacing).
+# ------------------------------------------------------------------------------
+name: Code Quality
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      gradle_cache_key:
+        required: true
+        type: string
+      run_code_quality:
+        type: boolean
+        default: true
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # ---------------------------
+      # 1. Skip workflow if disabled
+      # ---------------------------
+      - name: Check if code quality should run
+        if: ${{ !inputs.run_code_quality }}
+        run: |
+          echo "Code quality is disabled for this service, exiting..."
+          exit 0
+
+      # ---------------------------
+      # 2. Check out repository
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # ---------------------------
+      # 3. Set up Java 21
+      # ---------------------------
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # ---------------------------
+      # 4. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
+      #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
+      #   - If not found → try restore-keys prefix for partial match
+      #   - If still not found → Gradle downloads fresh, saved under key after job
+      # ---------------------------
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ inputs.gradle_cache_key }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # ---------------------------
+      # 5. Verifies that all Java source files(src/main/java/**/*.java, src/test/java/**/*.java) follow the
+      #    formatting rules(indentation, braces, imports, whitespace, and style) and fails the build if they don’t
+      # ---------------------------
+      - name: Run Spotless Check
+        run: ./gradlew spotlessCheck --no-daemon
+
+      # ---------------------------
+      # 6. Verifies that all Java source files(src/main/java/**/*.java, src/test/java/**/*.java) follow
+      #    coding standards and conventions (naming, Javadoc, imports, line length, spacing) and fails
+      #    the build if violations are found
+      # ---------------------------
+      - name: Run Checkstyle
+        run: ./gradlew checkstyleMain --no-daemon

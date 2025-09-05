@@ -1,0 +1,45 @@
+# ------------------------------------------------------------------------------
+# Action: Wait for Container to be Healthy
+# Purpose:
+#   Waits for a Docker container to report "healthy" status before continuing.
+#   Useful for databases, config servers, or any service that must be ready first.
+#
+# How it works:
+#   - Loops up to 10 times, checking container health with `docker inspect`.
+#   - If healthy → exits successfully.
+#   - If not healthy after retries → fails the workflow.
+# ------------------------------------------------------------------------------
+name: 'Wait for container to be healthy'
+description: 'Waits for a Docker container to report healthy status'
+inputs:
+  container_name:
+    description: 'Name of the Docker container'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    # ---------------------------
+    # 1. Poll container health
+    # ---------------------------
+    - name: Wait for ${{ inputs.container_name }} to be healthy
+      shell: bash
+      run: |
+        # Retry loop: check every 2 seconds up to 10 times
+        for i in {1..10}; do
+          STATUS=$(docker inspect --format='{{.State.Health.Status}}' ${{ inputs.container_name }})
+          if [ "$STATUS" == "healthy" ]; then
+            echo "✅ ${{ inputs.container_name }} is healthy!"
+            SUCCESS=1
+            break
+          fi
+          echo "⏳ Waiting for ${{ inputs.container_name }}... ($i)"
+          sleep 2
+        done
+        
+        # Fail only if we never succeeded
+        if [ -z "$SUCCESS" ]; then
+          echo "❌ ${{ inputs.container_name }} did not become healthy after 10 attempts"
+          exit 1
+        fi
+

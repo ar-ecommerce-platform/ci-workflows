@@ -1,0 +1,132 @@
+# Workflow: Security Scan
+# Purpose:
+#   Runs OWASP Dependency Check and Snyk Container Scan on test image
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - OWASP Dependency Check: Scans project dependencies for known vulnerabilities
+#   - Snyk Container Scan:
+# ------------------------------------------------------------------------------
+name: Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      gradle_cache_key:
+        required: true
+        type: string
+      run_security_scan:
+        type: boolean
+        default: true
+    secrets:
+      OWASP_API_KEY:
+        required: true
+      SNYK_TOKEN:
+        required: true
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      SERVICE_IMAGE: ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
+    steps:
+      # ---------------------------
+      # 1. Skip workflow if disabled
+      # ---------------------------
+      - name: Check if security scan should run
+        if: ${{ !inputs.run_security_scan }}
+        run: |
+          echo "Security scan is disabled for this service, exiting..."
+          exit 0
+
+      # ---------------------------
+      # 2. Check out repository
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------------------------
+      # 3. Set up Java 21
+      # ---------------------------
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # ---------------------------
+      # 4. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
+      #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
+      #   - If not found → try restore-keys prefix for partial match
+      #   - If still not found → Gradle downloads fresh, saved under key after job
+      # ---------------------------
+      - name: Restore Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ inputs.gradle_cache_key }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      # ---------------------------
+      # 5. Scans project dependencies for known vulnerabilities.
+      #    Fails the build if High/Critical issues are found (default threshold CVSS ≥ 7.0).
+      # ---------------------------
+      - name: Run OWASP Dependency Check
+        run: ./gradlew dependencyCheckAnalyze
+        env:
+          ORG_OWASP_DEPENDENCYCHECK_APIKEY: ${{ secrets.OWASP_API_KEY }}
+
+      # ---------------------------
+      # 6. If build fails, upload report as feedback to find out why it failed (which dependency, severity, etc.).
+      # ---------------------------
+      - name: Upload OWASP Reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: owasp-${{ inputs.service_name }}
+          path: build/reports/dependency-check
+
+      # ---------------------------
+      # 7. Log in to GitHub Container registry
+      # ---------------------------
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------
+      # 8. Pull test image
+      # ---------------------------
+      - name: Pull test image
+        run: docker pull $SERVICE_IMAGE
+
+      # ---------------------------
+      # 9. Run Snyk Container Scan on test image
+      # ---------------------------
+      - name: Run Snyk Container Scan
+        run: snyk container test $SERVICE_IMAGE
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      # ---------------------------
+      # 10. Upload Snyk Container Scan report
+      # ---------------------------
+      - name: Upload Snyk Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: snyk-${{ inputs.service_name }}
+          path: snyk-report.json

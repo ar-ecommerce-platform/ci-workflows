@@ -1,0 +1,102 @@
+# ------------------------------------------------------------------------------
+# Workflow: Setup
+# Purpose:
+#   Sets up Gradle, builds the service artifact, and pushes a test Docker image.
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - Docker image is tagged `:ci` and intended only for integration testing.
+#   - Skips running unit tests (`-x test`) since tests run in other workflows.
+# ------------------------------------------------------------------------------
+name: Setup
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  gradle:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    # ---------------------------
+    # Gradle cache key that will be used in other workflows
+    # ---------------------------
+    outputs:
+      gradle_cache_key: ${{ steps.set-key.outputs.key }}
+
+    steps:
+    # ---------------------------
+    # 1. Check out repository
+    # ---------------------------
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # ---------------------------
+    # 2. Set up Java 21
+    # ---------------------------
+    - name: Set up JDK 21
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    # ---------------------------
+    # 3. Generate cache key by hashing Gradle config files into a string of form:
+    #    "gradle" + OS + hashed string (e.g., gradle-linux-abc123)
+    # ---------------------------
+    - name: Compute Gradle Cache Key
+      id: set-key
+      run: |
+        echo "key=gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}" >> "$GITHUB_OUTPUT"
+
+
+    # ---------------------------
+    # 4. Searches GitHub Actions cache storage for an entry matching the key
+    #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
+    #   - If not found → try restore-keys prefix for partial match
+    #   - If still not found → Gradle downloads fresh, saved under key after job
+    # ---------------------------
+    - name: Cache Gradle Dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ steps.set-key.outputs.key }}
+        restore-keys: gradle-${{ runner.os }}-
+
+    # ---------------------------
+    # 5. Builds app
+    #   - Skips tests since they have their own workflow
+    # ---------------------------
+    - name: Build (no test)
+      run: ./gradlew build -x test --no-daemon
+
+    # ---------------------------
+    # 6. Logs in to GitHub Container registry
+    # ---------------------------
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # ---------------------------
+    # 7. Build, tag, and push test image (:ci) for integration tests
+    # ---------------------------
+    - name: Build Tag Push Test Image
+      run: |
+        IMAGE=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
+        docker build -t $IMAGE .
+        docker push $IMAGE
