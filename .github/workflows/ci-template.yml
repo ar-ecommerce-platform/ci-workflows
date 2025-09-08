@@ -50,8 +50,6 @@ jobs:
     uses: ./.github/workflows/setup.yml
     with:
       service_name: ${{ github.event.repository.name }}
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ---------------------------
   # 2. Runs Spotless Check and Checkstyle
