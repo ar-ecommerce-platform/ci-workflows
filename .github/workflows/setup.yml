@@ -93,10 +93,44 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     # ---------------------------
-    # 7. Build, tag, and push test image (:ci) for integration tests
+    # 7. Set Docker Image Name
     # ---------------------------
-    - name: Build Tag Push Test Image
+    - name: Set Docker Image Name
+      id: image
+      run: echo "image=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci" >> "$GITHUB_OUTPUT"
+
+
+    # ---------------------------
+    # 8. Build, and tag, test image (:ci)
+    # ---------------------------
+    - name: Build and Tag Test Image
+      run: docker build -t ${{ steps.image.outputs.image }} .
+
+    # ---------------------------
+    # 9. Start the service
+    # ---------------------------
+    - name: Start the service
       run: |
-        IMAGE=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
-        docker build -t $IMAGE .
-        docker push $IMAGE
+        docker run --rm -d \
+        --name ${{ inputs.service_name }} \
+        -p 8888:8888 \
+        --health-cmd="curl -f http://localhost:8888/actuator/health || exit 1" \
+        --health-interval=5s \
+        --health-timeout=3s \
+        --health-retries=5 \
+        ${{ steps.image.outputs.image }}
+
+    # ---------------------------
+    # 10. Wait for service to be healthy
+    # ---------------------------
+    - name: Wait for service to be healthy
+      uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@main
+      with:
+        container_name: ${{ inputs.service_name }}
+
+    # ---------------------------
+    # 11. Push test image
+    # ---------------------------
+    - name: Push Test Image
+      run: |
+        docker push ${{ steps.image.outputs.image }}

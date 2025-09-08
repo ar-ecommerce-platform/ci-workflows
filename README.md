@@ -19,17 +19,17 @@ ci-workflows/
 
 ## 📋 Available Workflows
 
-| Workflow              | Purpose                                                             |
-|-----------------------|---------------------------------------------------------------------|
-| ci-template.yml       | Template workflow that all services will call                       |
-| **Setup**             | Builds the service artifact and pushes a test (`:ci`) Docker image. |
-| **Code Quality**      | Runs Spotless and Checkstyle to enforce code style & conventions.   |
-| **Security Scan**     | Runs OWASP Dependency Check and Snyk container scan.                |
-| **Unit Tests**        | Runs unit tests and uploads coverage reports as artifacts.          |
-| **Integration Tests** | Spins up services + runs integration tests.                         |
-| **Quality Scan**      | SonarCloud analysis for bugs, smells, coverage.                     |
-| **Publish**           | Auto-bumps version, tags commit, retags image for release.          |
-| **Notify Slack**      | Sends CI summary to Slack.                                          |
+| Workflow              | Purpose                                                                                  |
+|-----------------------|------------------------------------------------------------------------------------------|
+| **CI Template**       | Template workflow that all services will call                                            |
+| **Setup**             | Builds the service artifact, pushes a test (`:ci`) Docker image, and verifies it starts with a smoke test. |
+| **Code Quality**      | Runs Spotless and Checkstyle to enforce code style & conventions.                        |
+| **Security Scan**     | Runs OWASP Dependency Check and Snyk container scan.                                     |
+| **Unit Tests**        | Runs unit tests and uploads coverage reports as artifacts.                               |
+| **Integration Tests** | Spins up services + runs integration tests.                                              |
+| **Quality Scan**      | SonarCloud analysis for bugs, smells, coverage.                                          |
+| **Publish**           | Auto-bumps version, tags commit, retags image for release.                               |
+| **Notify Slack**      | Sends CI summary to Slack.                                                               |
 
 ---
 
@@ -61,20 +61,28 @@ jobs:
 ---
 
 ## 📌 Notes
-- **Modular Workflows** – Each workflow is independent; services can opt in to the ones they need 
-(e.g., run security scans but skip integration tests).
-- **Versioning & Publish**
-    - Uses **Conventional Commits** for auto-bumping:
-        - `feat:` → minor
-        - `fix:` → patch
-        - `BREAKING CHANGE:` → major
-    - Updates `version.txt`, tags the commit, and Docker image.
-    - **Triggers only on merges to `main`.**
-- **Fail Fast** – Workflows stop early if setup, linting, or tests fail to avoid wasting resources.
-- **Caching** – Gradle dependencies are cached to speed up builds.
-- **Reproducible Builds** – Docker images are built the same way every time for consistency.
-- **Security Scans** – OWASP Dependency Check + Snyk run on every build to catch vulnerabilities.
-- **Notifications** – Slack workflow provides instant feedback to developers after CI runs (success/failure).
-- **Observability** – Logs, reports, and Slack notifications provide full traceability.
+1. **Modularity & Reusability**
+   - Each workflow (Setup, Code Quality, Unit Tests, etc.) is independent.
+   - Services opt in/out easily via ci-template.yml.
+   - Composite actions like wait-for-health can be reused anywhere.
+2. **Fail Fast Principle**
+   - Smoke test immediately after building the Docker image prevents wasting resources.
+   - Gradle caching and skipping unnecessary steps make CI efficient.
+3. **Security & Quality**
+   - OWASP & Snyk scans ensure security compliance.
+   - Spotless / Checkstyle enforce coding standards.
+   - SonarCloud tracks code quality and coverage.
+4. **Versioning & Release Automation**
+   - Uses Conventional Commits to auto-bump versions.
+   - Publish workflow updates version.txt, tags commits, and tags Docker images.
+   - Only triggers on merges to main.
+5. **Observability & Reporting**
+   - Uploads coverage reports and artifacts.
+   - Slack notifications provide CI/CD status updates.
+   - Logs and reports give traceability for all workflow steps.
+6. **Scalability**
+    - Works for multiple microservices in the platform.
+    - New services can plug in easily with the same template.
+    - Optional steps (integration tests, Code Quality) allow flexible workflows.
 
 
