@@ -18,6 +18,8 @@ on:
       service_name:
         required: true
         type: string
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   gradle:
