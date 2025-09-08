@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-# Workflow: Publish
+# Workflow: Docker Release
 # Purpose:
-#   Publishes a tested Docker image to GHCR (GitHub Container Registry).
+#   Retags a tested Docker image and version control.
 #   Uses commit history + Conventional Commits to auto-bump versions (major/minor/patch).
 #
 # Trigger:
@@ -16,7 +16,7 @@
 #   - Pushes a Git tag for the version so future bumps are based on commit history.
 #   - Tags the Git commit to match the released Docker image version
 # ------------------------------------------------------------------------------
-name: Publish
+name: Docker Release
 
 on:
   workflow_call:
@@ -24,12 +24,9 @@ on:
       service_name:
         required: true
         type: string
-    secrets:
-      GITHUB_TOKEN:
-        required: true
 
 jobs:
-  publish:
+  docker-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write

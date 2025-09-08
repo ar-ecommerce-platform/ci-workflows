@@ -39,7 +39,10 @@ on:
       quality_scan_status:
         required: true
         type: string
-      publish_status:
+      docker_release_status:
+        required: true
+        type: string
+      publish_reports_status:
         required: true
         type: string
     secrets:
@@ -67,7 +70,8 @@ jobs:
             "Unit Tests": process.env.UNIT_TESTS,
             "Integration Tests": process.env.INTEGRATION_TESTS,
             "Quality Scan": process.env.QUALITY_SCAN,
-            "Publish": process.env.PUBLISH,
+            "Docker Release": process.env.DOCKER_RELEASE,
+            "Publish Reports": process.env.PUBLISH_REPORTS,
           };
 
           // Map each job status to an emoji
@@ -116,7 +120,8 @@ jobs:
           UNIT_TESTS: ${{ inputs.unit_test_status }}
           INTEGRATION_TESTS: ${{ inputs.integration_tests_status }}
           QUALITY_SCAN: ${{ inputs.quality_scan_status }}
-          PUBLISH: ${{ inputs.publish_status }}
+          DOCKER_RELEASE: ${{ inputs.docker_release_status }}
+          PUBLISH_REPORTS: ${{ inputs.publish_reports_status }}
 
       # ---------------------------
       # 2. Send Slack Notification

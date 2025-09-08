@@ -1,0 +1,79 @@
+# ------------------------------------------------------------------------------
+# Workflow: Publish Reports
+# Purpose:
+#   Publishes test, coverage, and security reports to the `gh-pages` branch
+#   for use with live badges.
+#
+# Trigger:
+#         Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#     - Skips missing artifacts without failing.
+# ------------------------------------------------------------------------------
+name: Publish Reports
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+
+jobs:
+  publish-reports:
+    runs-on: ubuntu-latest
+    steps:
+      # ---------------------------
+      # 1. Checkout repo
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------------------------
+      # 2. Prepare GH Pages directories
+      # ---------------------------
+      - name: Prepare GH Pages directories
+        run: |
+          mkdir -p gh-pages/${{ inputs.service_name }}/test
+          mkdir -p gh-pages/${{ inputs.service_name }}/coverage
+          mkdir -p gh-pages/${{ inputs.service_name }}/security
+
+      # ---------------------------
+      # 3. Download Unit Test Report
+      # ---------------------------
+      - name: Download Unit Test Report
+        uses: actions/download-artifact@v3
+        with:
+          name: unit-${{ inputs.service_name }}
+          path: gh-pages/${{ inputs.service_name }}/test
+        continue-on-error: true
+
+      # ---------------------------
+      # 4. Download Coverage Report
+      # ---------------------------
+      - name: Download Coverage Report
+        uses: actions/download-artifact@v3
+        with:
+          name: jacoco-unit-exec-${{ inputs.service_name }}
+          path: gh-pages/${{ inputs.service_name }}/coverage
+        continue-on-error: true
+
+      # ---------------------------
+      # 5. Download OWASP Security Report
+      # ---------------------------
+      - name: Download OWASP Security Report
+        uses: actions/download-artifact@v3
+        with:
+          name: owasp-${{ inputs.service_name }}
+          path: gh-pages/${{ inputs.service_name }}/security
+        continue-on-error: true
+
+      # ---------------------------
+      # 6. Deploy to GitHub Pages
+      # ---------------------------
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: gh-pages
+          destination_branch: gh-pages

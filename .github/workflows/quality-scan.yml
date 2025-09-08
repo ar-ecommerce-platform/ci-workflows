@@ -30,8 +30,6 @@ on:
     secrets:
       SONAR_TOKEN:
         required: true
-      GITHUB_TOKEN:
-        required: true
 
 jobs:
   quality-scan:
@@ -69,7 +67,7 @@ jobs:
       #   - If not found → try restore-keys prefix for partial match
       #   - If still not found → Gradle downloads fresh, saved under key after job
       # ---------------------------
-      - name: Restore Gradle cache
+      - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
           path: |

@@ -23,9 +23,6 @@ on:
       run_unit_tests:
         type: boolean
         default: true
-    secrets:
-      GITHUB_TOKEN:
-        required: true
 
 jobs:
   unit-tests:

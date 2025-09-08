@@ -122,7 +122,7 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
         key: ${{ inputs.gradle_cache_key }}
-        restore_keys: |
+        restore-keys: |
           gradle-${{ runner.os }}-
 
     # ---------------------------

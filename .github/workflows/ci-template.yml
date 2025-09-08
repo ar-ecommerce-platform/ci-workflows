@@ -41,8 +41,6 @@ on:
         required: true
       SONAR_TOKEN:
         required: true
-      GITHUB_TOKEN:
-        required: true
 
 jobs:
   # ---------------------------
@@ -52,7 +50,8 @@ jobs:
     uses: ./.github/workflows/setup.yml
     with:
       service_name: ${{ github.event.repository.name }}
-    secrets: inherit
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ---------------------------
   # 2. Runs Spotless Check and Checkstyle
@@ -75,7 +74,10 @@ jobs:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
       run_security_scan: ${{ inputs.run_security_scan }}
-    secrets: inherit
+    secrets:
+      OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ---------------------------
   # 4. Runs Unit Tests
@@ -87,7 +89,6 @@ jobs:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
       run_unit_tests: ${{ inputs.run_unit_tests }}
-    secrets: inherit
 
   # ---------------------------
   # 5. Runs Integration Tests
@@ -100,7 +101,6 @@ jobs:
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
       enable_database: ${{ inputs.enable_database }}
       run_integration_tests: ${{ inputs.run_integration_tests }}
-    secrets: inherit
 
   # ---------------------------
   # 6. Runs SonarCloud analysis
@@ -113,23 +113,35 @@ jobs:
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
       run_unit_tests: ${{ inputs.run_unit_tests }}
       run_quality_scan: ${{ inputs.run_quality_scan }}
-    secrets: inherit
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # ---------------------------
   # 7. Auto-bumps version, tags commit, retags image for release.
   # ---------------------------
-  publish:
+  docker-release:
     if: github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/publish.yml
+    uses: ./.github/workflows/docker-release.yml
     needs: [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
-    secrets: inherit
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ---------------------------
-  # 8. Sends a summary of job statuses to a Slack channel at the end of a CI run.
+  # 8. Publishes reports to GitHub Pages for badges.
+  # ---------------------------
+  publish-reports:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/publish-reports.yml
+    needs: [unit-tests, security-scan]
+    with:
+      service_name: ${{ github.event.repository.name }}
+
+  # ---------------------------
+  # 9. Sends a summary of job statuses to a Slack channel at the end of a CI run.
   # ---------------------------
   notify:
     uses: ./.github/workflows/notify-slack.yml
-    needs: [setup, code-quality, security-scan, unit-tests, integration-tests, quality-scan, publish]
+    needs: [setup, code-quality, security-scan, unit-tests, integration-tests, quality-scan, docker-release, publish-reports]
     with:
       service_name: ${{ github.event.repository.name }}
       setup_status: ${{ needs.setup.result }}
@@ -138,5 +150,5 @@ jobs:
       unit_tests_status: ${{ needs.unit-tests.result }}
       integration_tests_status: ${{ needs.integration-tests.result }}
       quality_scan_status: ${{ needs.quality-scan.result }}
-      publish_status: ${{ needs.publish.result }}
-    secrets: inherit
+      docker_release_status: ${{ needs.docker-release.result }}
+      publish_reports_status: ${{ needs.publish-reports.result }}
