@@ -50,6 +50,9 @@ jobs:
     uses: ./.github/workflows/setup.yml
     with:
       service_name: ${{ github.event.repository.name }}
+    permissions:
+      contents: read
+      packages: write
 
 #  # ---------------------------
 #  # 2. Runs Spotless Check and Checkstyle
