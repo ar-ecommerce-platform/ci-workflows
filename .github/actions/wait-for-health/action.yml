@@ -25,21 +25,21 @@ runs:
     - name: Wait for ${{ inputs.container_name }} to be healthy
       shell: bash
       run: |
-#        # Retry loop: check every 2 seconds up to 10 times
-#        for i in {1..10}; do
-#          STATUS=$(docker inspect --format='{{.State.Health.Status}}' "${{ inputs.container_name }}")
-#          if [ "$STATUS" == "healthy" ]; then
-#            echo "✅ ${{ inputs.container_name }} is healthy!"
-#            SUCCESS=1
-#            break
-#          fi
-#          echo "⏳ Waiting for ${{ inputs.container_name }}... ($i)"
-#          sleep 2
-#        done
-#
-#        # Fail only if we never succeeded
-#        if [ -z "$SUCCESS" ]; then
-#          echo "❌ ${{ inputs.container_name }} did not become healthy after 10 attempts"
-#          exit 1
-#        fi
+        # Retry loop: check every 2 seconds up to 10 times
+        for i in {1..10}; do
+          STATUS=$(docker inspect --format='{{.State.Health.Status}}' "${{ inputs.container_name }}")
+          if [ "$STATUS" == "healthy" ]; then
+            echo "✅ ${{ inputs.container_name }} is healthy!"
+            SUCCESS=1
+            break
+          fi
+          echo "⏳ Waiting for ${{ inputs.container_name }}... ($i)"
+          sleep 2
+        done
+
+        # Fail only if we never succeeded
+        if [ -z "$SUCCESS" ]; then
+          echo "❌ ${{ inputs.container_name }} did not become healthy after 10 attempts"
+          exit 1
+        fi
 
