@@ -115,7 +115,10 @@ jobs:
         ${{ steps.image.outputs.image }}
 
     - name: Show container logs
-      run: docker logs ${{ inputs.service_name }}
+      run: |
+        echo "⏳ Waiting a few seconds for logs to appear..."
+        sleep 15
+        docker logs ${{ inputs.service_name }}
 
     # ---------------------------
     # 10. Wait for service to be healthy
