@@ -110,8 +110,8 @@ jobs:
         -p 8888:8888 \
         --health-cmd="curl -f http://localhost:8888/actuator/health || exit 1" \
         --health-interval=5s \
-        --health-timeout=3s \
-        --health-retries=5 \
+        --health-timeout=10s \
+        --health-retries=10 \
         ${{ steps.image.outputs.image }}
 
     # ---------------------------

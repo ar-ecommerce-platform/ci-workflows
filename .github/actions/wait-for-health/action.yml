@@ -52,7 +52,7 @@ runs:
       shell: bash
       run: |
         MAX_ATTEMPTS=30
-        SLEEP_INTERVAL=5
+        SLEEP_INTERVAL=7
         SUCCESS=
 
         for i in $(seq 1 $MAX_ATTEMPTS); do
