@@ -118,7 +118,7 @@ jobs:
     # 10. Wait for service to be healthy
     # ---------------------------
     - name: Wait for service to be healthy
-      uses: ./.github/actions/wait-for-health
+      uses: ../actions/wait-for-health
       with:
         container_name: ${{ inputs.service_name }}
 
