@@ -54,17 +54,17 @@ jobs:
       contents: read
       packages: write
 
-#  # ---------------------------
-#  # 2. Runs Spotless Check and Checkstyle
-#  # ---------------------------
-#  code-quality:
-#    uses: ./.github/workflows/code-quality.yml
-#    needs: setup
-#    with:
-#      service_name: ${{ github.event.repository.name }}
-#      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-#      run_code_quality: ${{ inputs.run_code_quality }}
-#
+  # ---------------------------
+  # 2. Runs Spotless Check and Checkstyle
+  # ---------------------------
+  code-quality:
+    uses: ./.github/workflows/code-quality.yml
+    needs: setup
+    with:
+      service_name: ${{ github.event.repository.name }}
+      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+      run_code_quality: ${{ inputs.run_code_quality }}
+
 #  # ---------------------------
 #  # 3. Runs OWASP Dependency Check and Snyk Container Scan
 #  # ---------------------------

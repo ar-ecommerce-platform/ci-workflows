@@ -114,17 +114,6 @@ jobs:
         --health-retries=15 \
         ${{ steps.image.outputs.image }}
 
-    - name: Show container logs
-      run: |
-        echo "⏳ Waiting a few seconds for logs to appear..."
-        sleep 15
-        docker logs ${{ inputs.service_name }}
-
-    - name: Debug Health Endpoint
-      run: |
-        docker exec ${{ inputs.service_name }} curl -s http://localhost:8888/actuator/health
-      continue-on-error: true
-
     # ---------------------------
     # 10. Wait for service to be healthy
     # ---------------------------
