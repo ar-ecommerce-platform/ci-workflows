@@ -24,7 +24,7 @@ tasks.register('downloadCheckstyleConfig', Copy) {
 
 checkstyle {
     toolVersion = "11.0.1"
-    config = checkstyleConfig
+    config = checkstyleConfig.asFile
     ignoreFailures = false
 }
 
