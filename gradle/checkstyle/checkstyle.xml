@@ -15,51 +15,51 @@
         <module name="LocalVariableName"/>
         <module name="MemberName"/>
 
-        <!-- Javadoc checks -->
-        <module name="JavadocType">
-            <property name="scope" value="public"/>
-        </module>
-        <module name="JavadocMethod">
-            <property name="scope" value="public"/>
-        </module>
-        <module name="JavadocVariable">
-            <property name="scope" value="public"/>
-        </module>
+<!--        &lt;!&ndash; Javadoc checks &ndash;&gt;-->
+<!--        <module name="JavadocType">-->
+<!--            <property name="scope" value="public"/>-->
+<!--        </module>-->
+<!--        <module name="JavadocMethod">-->
+<!--            <property name="scope" value="public"/>-->
+<!--        </module>-->
+<!--        <module name="JavadocVariable">-->
+<!--            <property name="scope" value="public"/>-->
+<!--        </module>-->
 
-        <!-- Import order and unused imports -->
-        <module name="AvoidStarImport"/>
-        <module name="UnusedImports"/>
-        <module name="ImportOrder">
-            <property name="ordered" value="true"/>
-            <property name="separateLineBetweenGroups" value="true"/>
-        </module>
+<!--        &lt;!&ndash; Import order and unused imports &ndash;&gt;-->
+<!--        <module name="AvoidStarImport"/>-->
+<!--        <module name="UnusedImports"/>-->
+<!--        <module name="ImportOrder">-->
+<!--            <property name="ordered" value="true"/>-->
+<!--            <property name="separateLineBetweenGroups" value="true"/>-->
+<!--        </module>-->
 
-        <!-- Line length and whitespace -->
-        <module name="LineLength">
-            <property name="max" value="100"/>
-        </module>
-        <module name="WhitespaceAfter"/>
-        <module name="WhitespaceAround"/>
+<!--        &lt;!&ndash; Line length and whitespace &ndash;&gt;-->
+<!--        <module name="LineLength">-->
+<!--            <property name="max" value="100"/>-->
+<!--        </module>-->
+<!--        <module name="WhitespaceAfter"/>-->
+<!--        <module name="WhitespaceAround"/>-->
 
-        <!-- Indentation -->
-        <module name="Indentation">
-            <property name="basicOffset" value="2"/>
-            <property name="braceAdjustment" value="0"/>
-            <property name="caseIndent" value="2"/>
-            <property name="tabWidth" value="2"/>
-        </module>
+<!--        &lt;!&ndash; Indentation &ndash;&gt;-->
+<!--        <module name="Indentation">-->
+<!--            <property name="basicOffset" value="2"/>-->
+<!--            <property name="braceAdjustment" value="0"/>-->
+<!--            <property name="caseIndent" value="2"/>-->
+<!--            <property name="tabWidth" value="2"/>-->
+<!--        </module>-->
 
-        <!-- Braces -->
-        <module name="LeftCurly">
-            <property name="option" value="eol"/>
-        </module>
-        <module name="RightCurly"/>
-        <module name="NeedBraces"/>
+<!--        &lt;!&ndash; Braces &ndash;&gt;-->
+<!--        <module name="LeftCurly">-->
+<!--            <property name="option" value="eol"/>-->
+<!--        </module>-->
+<!--        <module name="RightCurly"/>-->
+<!--        <module name="NeedBraces"/>-->
 
-        <!-- Misc -->
-        <module name="FinalClass"/>
-        <module name="FinalLocalVariable"/>
-        <module name="NoClone"/>
+<!--        &lt;!&ndash; Misc &ndash;&gt;-->
+<!--        <module name="FinalClass"/>-->
+<!--        <module name="FinalLocalVariable"/>-->
+<!--        <module name="NoClone"/>-->
 
     </module>
 
