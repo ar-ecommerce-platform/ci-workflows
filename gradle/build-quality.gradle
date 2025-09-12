@@ -14,9 +14,11 @@ spotless {
 // ---------------------------
 // Checkstyle
 // ---------------------------
+def checkstyleConfigUrl = "https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/dev/gradle/checkstyle/checkstyle.xml"
+
 checkstyle {
     toolVersion = "11.0.1"
-    config = "https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/dev/gradle/checkstyle/checkstyle.xml"
+    config = resources.text.fromUri(checkstyleConfigUrl)
     ignoreFailures = false
 }
 
