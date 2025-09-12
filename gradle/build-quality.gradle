@@ -14,10 +14,31 @@ spotless {
 // ---------------------------
 // Checkstyle
 // ---------------------------
+def checkstyleConfig = layout.buildDirectory.file("checkstyle/checkstyle.xml")
+
+tasks.register('downloadCheckstyleConfig', Copy) {
+    from resources.text.fromUri("https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/dev/gradle/checkstyle/checkstyle.xml")
+    into layout.buildDirectory.dir("checkstyle")
+    rename { 'checkstyle.xml' }
+}
+
 checkstyle {
     toolVersion = "11.0.1"
-    config = "https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/dev/gradle/checkstyle/checkstyle.xml"
+    config = checkstyleConfig
     ignoreFailures = false
+}
+
+// Make Checkstyle tasks depend on the download task
+tasks.named('checkstyleMain') {
+    dependsOn 'downloadCheckstyleConfig'
+}
+
+tasks.named('checkstyleTest') {
+    dependsOn 'downloadCheckstyleConfig'
+}
+
+tasks.named('checkstyleSmoke') {
+    dependsOn 'downloadCheckstyleConfig'
 }
 
 // Make `check` run everything in the right order
