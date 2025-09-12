@@ -11,7 +11,7 @@
         <module name="WhitespaceAround"/>
 
         <module name="EmptyBlock">
-            <property name="option" value="ignore"/>
+            <property name="option" value="allowEmpty"/>
         </module>
     </module>
 
