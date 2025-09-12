@@ -22,12 +22,6 @@ checkstyle {
     ignoreFailures = false
 }
 
-tasks.register('checkstyleTest', Checkstyle) {
-    source 'src/test/java'
-    include '**/*.java'
-    classpath = files()
-}
-
 // Make `check` run everything in the right order
 tasks.named('check').configure {
     dependsOn 'spotlessCheck', 'checkstyleMain', 'checkstyleTest'
