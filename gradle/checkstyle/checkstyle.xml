@@ -9,10 +9,6 @@
         <module name="UnusedImports"/>
         <module name="WhitespaceAfter"/>
         <module name="WhitespaceAround"/>
-
-        <module name="EmptyBlock">
-            <property name="option" value="allowEmpty"/>
-        </module>
     </module>
 
 </module>
