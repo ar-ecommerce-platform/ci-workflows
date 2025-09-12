@@ -1,0 +1,119 @@
+plugins {
+    id 'com.diffplug.spotless' version '7.2.1'
+    id 'checkstyle'
+    id "org.owasp.dependencycheck" version "12.1.3"
+    id 'jacoco'
+}
+
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+// ---------------------------
+// Spotless
+// ---------------------------
+spotless {
+    java {
+        target 'src/**/*.java'
+        googleJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+// ---------------------------
+// Checkstyle
+// ---------------------------
+checkstyle {
+    toolVersion = "11.0.1"
+    config = resources.text.fromUri(
+            "https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/dev/gradle/checkstyle/checkstyle.xml"
+    )
+    ignoreFailures = false
+}
+
+tasks.register('checkstyleTest', Checkstyle) {
+    source 'src/test/java'
+    include '**/*.java'
+    classpath = files()
+}
+
+// Make `check` run everything in the right order
+tasks.named('check').configure {
+    dependsOn 'spotlessCheck', 'checkstyleMain', 'checkstyleTest'
+}
+
+// ---------------------------
+// OWASP Dependency Check
+// ---------------------------
+dependencyCheck {
+    failBuildOnCVSS = 7.0
+    autoUpdate = true
+    format = 'ALL'
+    outputDirectory = layout.buildDirectory.dir("reports/owasp/${project.name}").get().asFile
+}
+
+// ---------------------------
+// Snyk Container Scan
+// ---------------------------
+tasks.register('snykContainerScan', Exec) {
+    group = "verification"
+    description = "Scan Docker image with Snyk"
+
+    def imageName = project.findProperty('image_name')
+    if (!imageName) {
+        logger.lifecycle("⚠️ No image_name specified for Snyk scan. Skipping.")
+    } else {
+        commandLine 'snyk', 'container', 'test', imageName
+    }
+}
+
+// ---------------------------
+// Unit Tests + JaCoCo
+// ---------------------------
+tasks.named('test') {
+    description = "Runs unit tests"
+    group = "verification"
+    useJUnitPlatform()
+
+    reports {
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/tests/unit/${project.name}"))
+    }
+
+    jacoco {
+        destinationFile = layout.buildDirectory.file("jacoco/${project.name}/test.exec").get().asFile
+    }
+
+    // Generate coverage report automatically
+    finalizedBy tasks.jacocoTestReport
+}
+
+tasks.jacocoTestReport {
+    group = "verification"
+    dependsOn tasks.test
+    executionData.setFrom(layout.buildDirectory.file("jacoco/${project.name}/test.exec"))
+
+    reports {
+        xml.required.set(true)
+        xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/${project.name}/coverage.xml"))
+
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/${project.name}/html"))
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    group = "verification"
+    dependsOn tasks.test
+    executionData.setFrom(layout.buildDirectory.file("jacoco/${project.name}/test.exec"))
+
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80 // fail if coverage < 80%
+            }
+        }
+    }
+}

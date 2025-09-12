@@ -20,7 +20,7 @@ on:
         type: string
 
 jobs:
-  gradle:
+  set-up:
     runs-on: ubuntu-latest
     # ---------------------------
     # Gradle cache key that will be used in other workflows

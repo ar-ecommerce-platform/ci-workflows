@@ -72,16 +72,13 @@ jobs:
             gradle-${{ runner.os }}-
 
       # ---------------------------
-      # 5. Verifies that all Java source files(src/main/java/**/*.java, src/test/java/**/*.java) follow the
-      #    formatting rules(indentation, braces, imports, whitespace, and style) and fails the build if they don’t
+      # 5. Runs Spotless Apply
       # ---------------------------
-      - name: Run Spotless Check
-        run: ./gradlew spotlessCheck --no-daemon
+      - name: Run Spotless Apply
+        run: ./gradlew spotlessApply --no-daemon
 
       # ---------------------------
-      # 6. Verifies that all Java source files(src/main/java/**/*.java, src/test/java/**/*.java) follow
-      #    coding standards and conventions (naming, Javadoc, imports, line length, spacing) and fails
-      #    the build if violations are found
+      # 6. Runs Spotless & Checkstyle(verify formatting + code style)
       # ---------------------------
-      - name: Run Checkstyle
-        run: ./gradlew checkstyleMain --no-daemon
+      - name: Run Code Quality Checks
+        run: ./gradlew check --no-daemon
