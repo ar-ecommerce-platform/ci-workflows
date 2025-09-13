@@ -35,6 +35,9 @@ dependencyCheck {
     autoUpdate = true
     format = 'ALL'
     outputDirectory = layout.buildDirectory.dir("reports/owasp/${project.name}").get().asFile
+    nvd {
+        apiKey = System.getenv("NVD_API_KEY")
+    }
 }
 
 // ---------------------------

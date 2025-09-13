@@ -91,7 +91,7 @@ jobs:
       - name: Run OWASP Dependency Check
         run: ./gradlew dependencyCheckAnalyze
         env:
-          ORG_OWASP_DEPENDENCYCHECK_APIKEY: ${{ secrets.OWASP_API_KEY }}
+          NVD_API_KEY: ${{ secrets.OWASP_API_KEY }}
       # ---------------------------
       # 6. If build fails, upload report as feedback to find out why it failed (which dependency, severity, etc.).
       # ---------------------------
