@@ -35,7 +35,6 @@ dependencyCheck {
     autoUpdate = true
     format = 'ALL'
     outputDirectory = layout.buildDirectory.dir("reports/owasp/${project.name}").get().asFile
-    nvdApiKey = System.getenv('ORG_OWASP_DEPENDENCYCHECK_APIKEY')
 }
 
 // ---------------------------
