@@ -82,7 +82,7 @@ jobs:
       # ---------------------------
       - name: Upload Unit Tests Report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: unit-${{ inputs.service_name }}
           path: build/reports/tests/unit/${{ inputs.service_name }}
@@ -91,7 +91,7 @@ jobs:
       # 7. Upload Coverage Artifact(Used in quality-scan.yml for SonarCloud Analysis)
       # ---------------------------
       - name: Upload Coverage Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jacoco-unit-exec-${{ inputs.service_name }}
           path: build/jacoco/${{ inputs.service_name }}/test.exec

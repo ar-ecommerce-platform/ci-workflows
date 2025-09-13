@@ -138,7 +138,7 @@ jobs:
       # ---------------------------
       - name: Upload Report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: integration-${{ inputs.service_name }}
           path: build/reports/tests/integration/${{ inputs.service_name }}
