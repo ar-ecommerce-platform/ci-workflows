@@ -64,19 +64,19 @@ jobs:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
       run_code_quality: ${{ inputs.run_code_quality }}
-#  # ---------------------------
-#  # 3. Runs OWASP Dependency Check and Snyk Container Scan
-#  # ---------------------------
-#  security-scan:
-#    uses: ./.github/workflows/security-scan.yml
-#    needs: setup
-#    with:
-#      service_name: ${{ github.event.repository.name }}
-#      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-#      run_security_scan: ${{ inputs.run_security_scan }}
-#    secrets:
-#      OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}
-#      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  # ---------------------------
+  # 3. Runs OWASP Dependency Check and Snyk Container Scan
+  # ---------------------------
+  security-scan:
+    uses: ./.github/workflows/security-scan.yml
+    needs: setup
+    with:
+      service_name: ${{ github.event.repository.name }}
+      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+      run_security_scan: ${{ inputs.run_security_scan }}
+    secrets:
+      OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 #
 #  # ---------------------------
 #  # 4. Runs Unit Tests
