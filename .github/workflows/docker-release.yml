@@ -58,9 +58,9 @@ jobs:
 
       # ---------------------------
       # 4. Determine version bump
-          # - "BREAKING CHANGE" → major
-          # - "feat:" → minor
-          # - "fix:" (or anything else) → patch
+      # - "BREAKING CHANGE" → major
+      # - "feat:" → minor
+      # - "fix:" (or anything else) → patch
       # ---------------------------
       - name: Determine version bump
         run: |
@@ -81,13 +81,13 @@ jobs:
           MAJOR=${VERSION_PARTS[0]#v}
           MINOR=${VERSION_PARTS[1]}
           PATCH=${VERSION_PARTS[2]}
-          
+
           case $BUMP in
             major) ((MAJOR++)); MINOR=0; PATCH=0 ;;
             minor) ((MINOR++)); PATCH=0 ;;
             patch) ((PATCH++)) ;;
           esac
-          
+
           NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
@@ -138,7 +138,6 @@ jobs:
         run: |
           git tag -a "v$NEXT_VERSION" -m "Release v$NEXT_VERSION"
           git push origin "v$NEXT_VERSION"
-      
 
       # ---------------------------
       # 11. Push release image
@@ -147,4 +146,3 @@ jobs:
         run: |
           docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
           docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:v$NEXT_VERSION
-

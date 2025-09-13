@@ -36,109 +36,109 @@ jobs:
       contents: read
 
     steps:
-    # ---------------------------
-    # 1. Skip workflow if disabled
-    # ---------------------------
-    - name: Check if integration tests should run
-      if: ${{ !inputs.run_integration_tests }}
-      run: |
-        echo "Integration tests are disabled for this service, exiting..."
-        exit 0
+      # ---------------------------
+      # 1. Skip workflow if disabled
+      # ---------------------------
+      - name: Check if integration tests should run
+        if: ${{ !inputs.run_integration_tests }}
+        run: |
+          echo "Integration tests are disabled for this service, exiting..."
+          exit 0
 
-    # ---------------------------
-    # 2. Start Config Server to get configuration files for service
-    # ---------------------------
-    - name: Start Config Server
-      run: |
-        docker run --rm -d \
-        --name config-server \
-        -p 8888:8888 \
-        --health-cmd="curl -f http://localhost:8888/actuator/health || exit 1" \
-        --health-interval=5s \
-        --health-timeout=3s \
-        --health-retries=5 \
-        ghcr.io/ar-ecommerce-platform/config-server:latest
+      # ---------------------------
+      # 2. Start Config Server to get configuration files for service
+      # ---------------------------
+      - name: Start Config Server
+        run: |
+          docker run --rm -d \
+          --name config-server \
+          -p 8888:8888 \
+          --health-cmd="curl -f http://localhost:8888/actuator/health || exit 1" \
+          --health-interval=5s \
+          --health-timeout=3s \
+          --health-retries=5 \
+          ghcr.io/ar-ecommerce-platform/config-server:latest
 
-    # ---------------------------
-    # 3. Waits for config server to be healthy
-    # ---------------------------
-    - name: Wait for config-server to be healthy
-      uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@main
-      with:
-        container_name: config-server
+      # ---------------------------
+      # 3. Waits for config server to be healthy
+      # ---------------------------
+      - name: Wait for config-server to be healthy
+        uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@main
+        with:
+          container_name: config-server
 
-    # ---------------------------
-    # 4. Start Test Database
-    # ---------------------------
-    - name: Start Test Database
-      if: ${{ inputs.enable_database }}
-      run: |
-        docker run --rm -d \
-        --name test-db \
-        -p 5432:5432 \
-        -e POSTGRES_USER=test \
-        -e POSTGRES_PASSWORD=test \
-        -e POSTGRES_DB=testdb \
-        --health-cmd="pg_isready -U test" \
-        --health-interval=10s \
-        --health-timeout=5s \
-        --health-retries=5 \
-        postgres:17.5
+      # ---------------------------
+      # 4. Start Test Database
+      # ---------------------------
+      - name: Start Test Database
+        if: ${{ inputs.enable_database }}
+        run: |
+          docker run --rm -d \
+          --name test-db \
+          -p 5432:5432 \
+          -e POSTGRES_USER=test \
+          -e POSTGRES_PASSWORD=test \
+          -e POSTGRES_DB=testdb \
+          --health-cmd="pg_isready -U test" \
+          --health-interval=10s \
+          --health-timeout=5s \
+          --health-retries=5 \
+          postgres:17.5
 
-    # ---------------------------
-    # 5. Waits for test database to be healthy
-    # ---------------------------
-    - name: Wait for test-db to be healthy
-      if: ${{ inputs.enable_database }}
-      uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@main
-      with:
-        container_name: test-db
+      # ---------------------------
+      # 5. Waits for test database to be healthy
+      # ---------------------------
+      - name: Wait for test-db to be healthy
+        if: ${{ inputs.enable_database }}
+        uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@main
+        with:
+          container_name: test-db
 
-    # ---------------------------
-    # 6. Check out repository
-    # ---------------------------
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      # ---------------------------
+      # 6. Check out repository
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # ---------------------------
-    # 7. Set up Java 21
-    # ---------------------------
-    - name: Set up JDK 21
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '21'
+      # ---------------------------
+      # 7. Set up Java 21
+      # ---------------------------
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "21"
 
-    # ---------------------------
-    # 8. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
-    #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
-    #   - If not found → try restore-keys prefix for partial match
-    #   - If still not found → Gradle downloads fresh, saved under key after job
-    # ---------------------------
-    - name: Cache Gradle dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ inputs.gradle_cache_key }}
-        restore-keys: |
-          gradle-${{ runner.os }}-
+      # ---------------------------
+      # 8. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
+      #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
+      #   - If not found → try restore-keys prefix for partial match
+      #   - If still not found → Gradle downloads fresh, saved under key after job
+      # ---------------------------
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ inputs.gradle_cache_key }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
 
-    # ---------------------------
-    # 9. Run Integration Tests
-    # ---------------------------
-    - name: Run Integration Tests
-      run: ./gradlew integrationTest --no-daemon
-      env:
-        SERVICE_IMAGE: ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
+      # ---------------------------
+      # 9. Run Integration Tests
+      # ---------------------------
+      - name: Run Integration Tests
+        run: ./gradlew integrationTest --no-daemon
+        env:
+          SERVICE_IMAGE: ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
 
-    # ---------------------------
-    # 10. Upload report for feedback
-    # ---------------------------
-    - name: Upload Report
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: integration-${{ inputs.service_name }}
-        path: build/reports/tests/integration/${{ inputs.service_name }}
+      # ---------------------------
+      # 10. Upload report for feedback
+      # ---------------------------
+      - name: Upload Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-${{ inputs.service_name }}
+          path: build/reports/tests/integration/${{ inputs.service_name }}
