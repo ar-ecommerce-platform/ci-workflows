@@ -82,9 +82,7 @@ jobs:
       #    Fails the build if High/Critical issues are found (default threshold CVSS ≥ 7.0).
       # ---------------------------
       - name: Run OWASP Dependency Check
-        run: ./gradlew dependencyCheckAnalyze
-        env:
-          ORG_OWASP_DEPENDENCYCHECK_APIKEY: ${{ secrets.OWASP_API_KEY }}
+        run: ./gradlew dependencyCheckAnalyze -DdependencyCheck.apiKey=${{ secrets.OWASP_API_KEY }}
 
       # ---------------------------
       # 6. If build fails, upload report as feedback to find out why it failed (which dependency, severity, etc.).
