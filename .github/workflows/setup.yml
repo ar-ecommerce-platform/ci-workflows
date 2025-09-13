@@ -20,7 +20,7 @@ on:
         type: string
 
 jobs:
-  set-up:
+  setup:
     runs-on: ubuntu-latest
     # ---------------------------
     # Gradle cache key that will be used in other workflows
@@ -44,7 +44,6 @@ jobs:
           distribution: "temurin"
           java-version: "21"
 
-
       # ---------------------------
       # 3. Generate cache key by hashing Gradle config files into a string of form:
       #    "gradle" + OS + hashed string (e.g., gradle-linux-abc123)
@@ -53,10 +52,6 @@ jobs:
         id: set-key
         run: |
           echo "key=gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}" >> "$GITHUB_OUTPUT"
-
-      - name: Print Gradle Cache Key
-        run: |
-          echo "Gradle Cache Key: ${{ steps.set-key.outputs.key }}"
 
       # ---------------------------
       # 4. Searches GitHub Actions cache storage for an entry matching the key
