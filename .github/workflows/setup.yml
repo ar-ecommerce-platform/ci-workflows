@@ -67,7 +67,8 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
         key: ${{ steps.set-key.outputs.key }}
-        restore-keys: gradle-${{ runner.os }}-
+        restore-keys: |
+          gradle-${{ runner.os }}-
 
     # ---------------------------
     # 5. Builds app
