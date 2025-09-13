@@ -44,9 +44,6 @@ jobs:
           distribution: "temurin"
           java-version: "21"
 
-      - name: Debug Gradle Cache Key Input
-        run: |
-          echo "gradle_cache_key input: '${{ inputs.gradle_cache_key }}'"
 
       # ---------------------------
       # 3. Generate cache key by hashing Gradle config files into a string of form:

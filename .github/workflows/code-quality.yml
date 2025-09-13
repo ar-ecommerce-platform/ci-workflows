@@ -55,6 +55,10 @@ jobs:
           distribution: "temurin"
           java-version: "21"
 
+      - name: Debug Gradle Cache Key Input
+        run: |
+          echo "gradle_cache_key input: '${{ inputs.gradle_cache_key }}'"
+
       # ---------------------------
       # 4. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
       #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
