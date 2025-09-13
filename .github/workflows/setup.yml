@@ -18,6 +18,10 @@ on:
       service_name:
         required: true
         type: string
+    outputs:
+      gradle_cache_key:
+        description: "Gradle cache key for downstream jobs"
+        value: ${{ jobs.setup.outputs.gradle_cache_key }}
 
 jobs:
   setup:
