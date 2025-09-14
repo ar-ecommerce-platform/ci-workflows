@@ -78,17 +78,17 @@ jobs:
     secrets:
       OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-#
-#  # ---------------------------
-#  # 4. Runs Unit Tests
-#  # ---------------------------
-#  unit-tests:
-#    uses: ./.github/workflows/unit-tests.yml
-#    needs: setup
-#    with:
-#      service_name: ${{ github.event.repository.name }}
-#      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-#      run_unit_tests: ${{ inputs.run_unit_tests }}
+
+  # ---------------------------
+  # 4. Runs Unit Tests
+  # ---------------------------
+  unit-tests:
+    uses: ./.github/workflows/unit-tests.yml
+    needs: setup
+    with:
+      service_name: ${{ github.event.repository.name }}
+      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+      run_unit_tests: ${{ inputs.run_unit_tests }}
 #
 #  # ---------------------------
 #  # 5. Runs Integration Tests
