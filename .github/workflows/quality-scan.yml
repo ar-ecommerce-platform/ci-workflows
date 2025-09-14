@@ -50,7 +50,7 @@ jobs:
       # 2. Check out repository
       # ---------------------------
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       # ---------------------------
       # 3. Set up Java 21
@@ -80,7 +80,7 @@ jobs:
       # 5. Download Jacoco report for SonarCloud Analysis
       # ---------------------------
       - name: Download Unit Test Coverage
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v5
         with:
           name: jacoco-unit-exec-${{ inputs.service_name }}
           path: build/jacoco/${{ inputs.service_name }}

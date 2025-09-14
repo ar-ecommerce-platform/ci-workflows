@@ -51,7 +51,7 @@ jobs:
       # 2. Check out repository
       # ---------------------------
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # ---------------------------
       # 3. Set up Java 21

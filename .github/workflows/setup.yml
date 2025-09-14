@@ -37,7 +37,7 @@ jobs:
       # 1. Check out repository
       # ---------------------------
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       # ---------------------------
       # 2. Set up Java 21
@@ -64,7 +64,7 @@ jobs:
       #   - If still not found → Gradle downloads fresh, saved under key after job
       # ---------------------------
       - name: Cache Gradle Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
