@@ -92,7 +92,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          ./gradlew sonarqube \
+          ./gradlew sonar \
             -Dsonar.projectKey=${{ inputs.service_name }} \
             -Dsonar.organization=ar-ecommerce-platform \
             -Dsonar.host.url=https://sonarcloud.io \
