@@ -69,6 +69,7 @@ tasks.named('test') {
     }
 
     jacoco {
+        // The `.exec` file is used by `jacocoTestReport` to generate coverage reports.
         destinationFile = layout.buildDirectory.file("jacoco/${project.name}/test.exec").get().asFile
     }
 
