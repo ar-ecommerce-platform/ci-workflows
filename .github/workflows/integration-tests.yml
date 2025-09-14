@@ -36,9 +36,6 @@ jobs:
       contents: read
 
     steps:
-      - name: Check boolean
-        run: |
-          echo "run_integration_tests raw value: ${{ inputs.run_integration_tests }}"
       # ---------------------------
       # 1. Skip workflow if disabled
       # ---------------------------

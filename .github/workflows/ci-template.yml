@@ -64,7 +64,7 @@ jobs:
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-      run_code_quality: ${{ fromJSON(inputs.run_code_quality) }}
+      run_code_quality: ${{ inputs.run_code_quality }}
   # ---------------------------
   # 3. Runs OWASP Dependency Check and Snyk Container Scan
   # ---------------------------
@@ -74,7 +74,7 @@ jobs:
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-      run_security_scan: ${{ fromJSON(inputs.run_security_scan) }}
+      run_security_scan: ${{ inputs.run_security_scan }}
     secrets:
       OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -88,12 +88,13 @@ jobs:
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-      run_unit_tests: ${{ fromJSON(inputs.run_unit_tests) }}
+      run_unit_tests: ${{ inputs.run_unit_tests }}
 
   # ---------------------------
   # 5. Runs Integration Tests
   # ---------------------------
   integration-tests:
+    if: ${{ inputs.run_integration_tests }}
     uses: ./.github/workflows/integration-tests.yml
     needs: setup
     with:
@@ -116,13 +117,13 @@ jobs:
 #    secrets:
 #      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 #
-#  # ---------------------------
-#  # 7. Auto-bumps version, tags commit, retags image for release.
-#  # ---------------------------
-#  docker-release:
-#    if: github.ref == 'refs/heads/main'
-#    uses: ./.github/workflows/docker-release.yml
-#    needs: [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
+  # ---------------------------
+  # 7. Auto-bumps version, tags commit, retags image for release.
+  # ---------------------------
+  docker-release:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/docker-release.yml
+    needs: [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
 #
 #  # ---------------------------
 #  # 8. Publishes reports to GitHub Pages for badges.
