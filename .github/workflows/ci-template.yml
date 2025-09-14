@@ -111,7 +111,7 @@ jobs:
   # 6. Runs SonarCloud analysis
   # ---------------------------
   quality-scan:
-    if: ${{ inputs.run_quality_scan && run_unit_tests}}
+    if: ${{ inputs.run_quality_scan && inputs.run_unit_tests }}
     uses: ./.github/workflows/quality-scan.yml
     needs: [setup, unit-tests]
     with:
