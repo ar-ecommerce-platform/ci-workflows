@@ -30,7 +30,7 @@ on:
         default: true
 
 jobs:
-  integration:
+  integration-tests:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -63,7 +63,7 @@ jobs:
       # 3. Waits for config server to be healthy
       # ---------------------------
       - name: Wait for config-server to be healthy
-        uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@main
+        uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@dev
         with:
           container_name: config-server
 
@@ -90,7 +90,7 @@ jobs:
       # ---------------------------
       - name: Wait for test-db to be healthy
         if: ${{ inputs.enable_database }}
-        uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@main
+        uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@dev
         with:
           container_name: test-db
 
