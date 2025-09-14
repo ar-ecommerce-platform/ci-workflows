@@ -94,7 +94,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: owasp-${{ inputs.service_name }}
-          path: build/reports/dependency-check
+          path: build/reports/owasp/${{ inputs.service_name }}
 
       # ---------------------------
       # 7. Log in to GitHub Container registry
@@ -113,13 +113,7 @@ jobs:
         run: docker pull $SERVICE_IMAGE
 
       # ---------------------------
-      # 9. Install Snyk CLI
-      # ---------------------------
-#      - name: Install Snyk CLI
-#        uses: snyk/actions/setup@master
-
-      # ---------------------------
-      # 10. Run Snyk Container Scan on test image
+      # 9. Run Snyk Container Scan on test image
       # ---------------------------
       - name: Run Snyk Docker Action to test image
         uses: snyk/actions/docker@master
@@ -132,9 +126,11 @@ jobs:
           args: --file=Dockerfile --severity-threshold=high --sarif-file-output=snyk.sarif
 
       # ---------------------------
-      # 11. Upload Snyk Container Scan report
+      # 10. Upload Snyk Container Scan report
       # ---------------------------
-      - name: Upload Snyk report as SARIF
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Upload Snyk Reports
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: snyk.sarif
+          name: snyk-${{ inputs.service_name }}
+          path: snyk.sarif
