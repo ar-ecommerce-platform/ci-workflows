@@ -40,8 +40,9 @@ on:
       OWASP_API_KEY:
         required: true
       SONAR_TOKEN:
-        required: true
-
+        required: false
+      SNYK_TOKEN:
+        required: false
 jobs:
   # ---------------------------
   # 1. Sets up Gradle, builds the service artifact, and pushes a test Docker image.
