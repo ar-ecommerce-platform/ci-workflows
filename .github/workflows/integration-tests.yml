@@ -43,7 +43,7 @@ jobs:
       # 1. Skip workflow if disabled
       # ---------------------------
       - name: Check if integration tests should run
-        if: ${{ inputs.run_integration_tests != true }}
+        if: ${{ inputs.run_integration_tests == 'false' }}
         run: |
           echo "Integration tests are disabled for this service, exiting..."
           exit 0
