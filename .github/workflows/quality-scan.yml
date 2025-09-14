@@ -77,13 +77,13 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
 
       # ---------------------------
-      # 5. Download Jacoco report for SonarCloud Analysis
+      # 5. Download Jacoco XML for SonarCloud
       # ---------------------------
       - name: Download Unit Test Coverage
         uses: actions/download-artifact@v5
         with:
-          name: jacoco-unit-exec-${{ inputs.service_name }}
-          path: build/jacoco/${{ inputs.service_name }}
+          name: coverage-${{ inputs.service_name }}
+          path: build/reports/jacoco/${{ inputs.service_name }}
 
       # ---------------------------
       # 6. Run SonarCloud Analysis

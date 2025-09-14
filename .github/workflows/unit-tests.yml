@@ -93,7 +93,7 @@ jobs:
       - name: Upload Coverage Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: jacoco-unit-exec-${{ inputs.service_name }}
+          name: coverage-${{ inputs.service_name }}
           path: |
             build/jacoco/${{ inputs.service_name }}/test.exec
             build/reports/jacoco/${{ inputs.service_name }}/coverage.xml
