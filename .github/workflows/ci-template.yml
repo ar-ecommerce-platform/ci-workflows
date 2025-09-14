@@ -117,13 +117,13 @@ jobs:
 #    secrets:
 #      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 #
-  # ---------------------------
-  # 7. Auto-bumps version, tags commit, retags image for release.
-  # ---------------------------
-  docker-release:
-    if: github.ref == 'refs/heads/main'
-    uses: ./.github/workflows/docker-release.yml
-    needs: [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
+#  # ---------------------------
+#  # 7. Auto-bumps version, tags commit, retags image for release.
+#  # ---------------------------
+#  docker-release:
+#    if: github.ref == 'refs/heads/main'
+#    uses: ./.github/workflows/docker-release.yml
+#    needs: [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
 #
 #  # ---------------------------
 #  # 8. Publishes reports to GitHub Pages for badges.
