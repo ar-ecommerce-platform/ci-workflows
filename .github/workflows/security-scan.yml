@@ -7,7 +7,7 @@
 #
 # Notes:
 #   - OWASP Dependency Check: Scans project dependencies for known vulnerabilities
-#   - Snyk Container Scan:
+#   - Snyk Container Scan: Scans Docker images for known vulnerabilities
 # ------------------------------------------------------------------------------
 name: Security Scan
 

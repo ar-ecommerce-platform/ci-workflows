@@ -59,16 +59,19 @@ jobs:
   # 2. Runs Spotless Check and Checkstyle
   # ---------------------------
   code-quality:
+    if: ${{ inputs.run_code_quality }}
     uses: ./.github/workflows/code-quality.yml
     needs: setup
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
       run_code_quality: ${{ inputs.run_code_quality }}
+
   # ---------------------------
   # 3. Runs OWASP Dependency Check and Snyk Container Scan
   # ---------------------------
   security-scan:
+    if: ${{ inputs.run_security_scan }}
     uses: ./.github/workflows/security-scan.yml
     needs: setup
     with:
@@ -83,6 +86,7 @@ jobs:
   # 4. Runs Unit Tests
   # ---------------------------
   unit-tests:
+    if: ${{ inputs.run_unit_tests }}
     uses: ./.github/workflows/unit-tests.yml
     needs: setup
     with:
@@ -102,21 +106,20 @@ jobs:
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
       enable_database: ${{ inputs.enable_database }}
       run_integration_tests: ${{ inputs.run_integration_tests }}
-#
-#  # ---------------------------
-#  # 6. Runs SonarCloud analysis
-#  # ---------------------------
-#  quality-scan:
-#    uses: ./.github/workflows/quality-scan.yml
-#    needs: [setup, unit-tests]
-#    with:
-#      service_name: ${{ github.event.repository.name }}
-#      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-#      run_unit_tests: ${{ inputs.run_unit_tests }}
-#      run_quality_scan: ${{ inputs.run_quality_scan }}
-#    secrets:
-#      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#
+
+  # ---------------------------
+  # 6. Runs SonarCloud analysis
+  # ---------------------------
+  quality-scan:
+    uses: ./.github/workflows/quality-scan.yml
+    needs: [setup, unit-tests]
+    with:
+      service_name: ${{ github.event.repository.name }}
+      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+      run_unit_tests: ${{ inputs.run_unit_tests }}
+      run_quality_scan: ${{ inputs.run_quality_scan }}
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 #  # ---------------------------
 #  # 7. Auto-bumps version, tags commit, retags image for release.
 #  # ---------------------------
