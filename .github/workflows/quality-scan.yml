@@ -87,10 +87,6 @@ jobs:
           name: coverage-xml-${{ inputs.service_name }}
           path: build/reports/jacoco/${{ inputs.service_name }}
 
-      # Debug coverage path
-      - name: Verify Coverage Report Exists
-        run: ls -R
-
       # ---------------------------
       # 6. Rebuild Project (needed for sonar.java.binaries)
       # ---------------------------
