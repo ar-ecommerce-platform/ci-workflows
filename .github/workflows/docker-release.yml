@@ -53,7 +53,11 @@ jobs:
       # ---------------------------
       - name: Get commits since last tag
         run: |
-          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+          if [ "$LAST_TAG" == "v0.0.0" ]; then
+            COMMITS=$(git log --pretty=format:"%s")
+          else
+            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+          fi
           echo "COMMITS=$COMMITS" >> $GITHUB_ENV
 
       # ---------------------------
