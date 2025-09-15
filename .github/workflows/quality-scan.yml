@@ -84,7 +84,7 @@ jobs:
       - name: Download Unit Test Coverage
         uses: actions/download-artifact@v5
         with:
-          name: coverage-${{ inputs.service_name }}
+          name: coverage-xml-${{ inputs.service_name }}
           path: .
 
       # Debug coverage path
