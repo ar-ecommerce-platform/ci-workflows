@@ -97,7 +97,7 @@ jobs:
           path: build/jacoco/${{ inputs.service_name }}/test.exec
 
       # ---------------------------
-      # 7. Upload Coverage Artifacts(Used in quality-scan.yml for SonarCloud Analysis)
+      # 8. Upload Coverage Artifacts(Used in quality-scan.yml for SonarCloud Analysis)
       # ---------------------------
       - name: Upload Coverage XML Artifact
         uses: actions/upload-artifact@v4
