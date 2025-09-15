@@ -88,12 +88,19 @@ jobs:
           path: build/reports/tests/unit/${{ inputs.service_name }}
 
       # ---------------------------
-      # 7. Upload Coverage Artifacts(Used in quality-scan.yml for SonarCloud Analysis and coverage badge)
+      # 7. Upload Coverage Artifacts(Used for coverage badge)
       # ---------------------------
       - name: Upload Coverage Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ inputs.service_name }}
-          path: |
-            build/jacoco/${{ inputs.service_name }}/test.exec
-            build/reports/jacoco/${{ inputs.service_name }}/coverage.xml
+          name: test-exec-${{ inputs.service_name }}
+          path: build/jacoco/${{ inputs.service_name }}/test.exec
+
+      # ---------------------------
+      # 7. Upload Coverage Artifacts(Used in quality-scan.yml for SonarCloud Analysis)
+      # ---------------------------
+      - name: Upload Coverage XML Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml-${{ inputs.service_name }}
+          path: build/reports/jacoco/${{ inputs.service_name }}/coverage.xml
