@@ -37,7 +37,7 @@ jobs:
       # 1. Check out repo so we can read tags and commits
       # ---------------------------
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       # ---------------------------
       # 2. Get last Git tag (or start from v0.0.0 if none exist yet)
@@ -103,46 +103,46 @@ jobs:
           git diff --cached --quiet || git commit -m "chore(release): v$NEXT_VERSION [skip ci]"
           git push
 
-      # ---------------------------
-      # 7. Log into GHCR
-      # ---------------------------
-      - name: Log into GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # ---------------------------
-      # 8. Pull CI Image
-      # ---------------------------
-      - name: Pull CI image
-        run: |
-          docker pull ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
-
-      # ---------------------------
-      # 9. Retag image for release
-      # ---------------------------
-      - name: Retag image for release
-        run: |
-          LATEST_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
-          VERSION_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:v$NEXT_VERSION
-
-          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $LATEST_TAG
-          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $VERSION_TAG
-
-      # ---------------------------
-      # 10. Tag commit
-      # ---------------------------
-      - name: Tag commit
-        run: |
-          git tag -a "v$NEXT_VERSION" -m "Release v$NEXT_VERSION"
-          git push origin "v$NEXT_VERSION"
-
-      # ---------------------------
-      # 11. Push release image
-      # ---------------------------
-      - name: Push release image
-        run: |
-          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
-          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:v$NEXT_VERSION
+#      # ---------------------------
+#      # 7. Log into GHCR
+#      # ---------------------------
+#      - name: Log into GHCR
+#        uses: docker/login-action@v3
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      # ---------------------------
+#      # 8. Pull CI Image
+#      # ---------------------------
+#      - name: Pull CI image
+#        run: |
+#          docker pull ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
+#
+#      # ---------------------------
+#      # 9. Retag image for release
+#      # ---------------------------
+#      - name: Retag image for release
+#        run: |
+#          LATEST_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
+#          VERSION_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:v$NEXT_VERSION
+#
+#          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $LATEST_TAG
+#          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $VERSION_TAG
+#
+#      # ---------------------------
+#      # 10. Tag commit
+#      # ---------------------------
+#      - name: Tag commit
+#        run: |
+#          git tag -a "v$NEXT_VERSION" -m "Release v$NEXT_VERSION"
+#          git push origin "v$NEXT_VERSION"
+#
+#      # ---------------------------
+#      # 11. Push release image
+#      # ---------------------------
+#      - name: Push release image
+#        run: |
+#          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
+#          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:v$NEXT_VERSION

@@ -21,9 +21,6 @@ on:
       gradle_cache_key:
         required: true
         type: string
-      run_code_quality:
-        type: boolean
-        default: true
 
 jobs:
   code-quality:
@@ -32,22 +29,13 @@ jobs:
       contents: read
     steps:
       # ---------------------------
-      # 1. Skip workflow if disabled
-      # ---------------------------
-      - name: Check if code quality should run
-        if: ${{ !inputs.run_code_quality }}
-        run: |
-          echo "Code quality is disabled for this service, exiting..."
-          exit 0
-
-      # ---------------------------
-      # 2. Check out repository
+      # 1. Check out repository
       # ---------------------------
       - name: Checkout repository
         uses: actions/checkout@v5
 
       # ---------------------------
-      # 3. Set up Java 21
+      # 2. Set up Java 21
       # ---------------------------
       - name: Set up JDK
         uses: actions/setup-java@v3
@@ -60,7 +48,7 @@ jobs:
           echo "gradle_cache_key input: '${{ inputs.gradle_cache_key }}'"
 
       # ---------------------------
-      # 4. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
+      # 3. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
       #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
       #   - If not found → try restore-keys prefix for partial match
       #   - If still not found → Gradle downloads fresh, saved under key after job
@@ -76,7 +64,7 @@ jobs:
             gradle-${{ runner.os }}-
 
       # ---------------------------
-      # 5. Runs Spotless & Checkstyle(verify formatting + code style)
+      # 4. Runs Spotless & Checkstyle(verify formatting + code style)
       # ---------------------------
       - name: Run Code Quality Checks
         run: ./gradlew check --no-daemon

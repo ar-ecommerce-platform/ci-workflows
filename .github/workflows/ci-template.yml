@@ -65,7 +65,6 @@ jobs:
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-      run_code_quality: ${{ inputs.run_code_quality }}
 
   # ---------------------------
   # 3. Runs OWASP Dependency Check and Snyk Container Scan
@@ -77,7 +76,6 @@ jobs:
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-      run_security_scan: ${{ inputs.run_security_scan }}
     secrets:
       OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -92,7 +90,6 @@ jobs:
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-      run_unit_tests: ${{ inputs.run_unit_tests }}
 
   # ---------------------------
   # 5. Runs Integration Tests
@@ -105,7 +102,6 @@ jobs:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
       enable_database: ${{ inputs.enable_database }}
-      run_integration_tests: ${{ inputs.run_integration_tests }}
 
   # ---------------------------
   # 6. Runs SonarCloud analysis
@@ -117,41 +113,39 @@ jobs:
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
-      run_unit_tests: ${{ inputs.run_unit_tests }}
-      run_quality_scan: ${{ inputs.run_quality_scan }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#  # ---------------------------
-#  # 7. Auto-bumps version, tags commit, retags image for release.
-#  # ---------------------------
-#  docker-release:
-#    if: github.ref == 'refs/heads/main'
-#    uses: ./.github/workflows/docker-release.yml
-#    needs: [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
-#
-#  # ---------------------------
-#  # 8. Publishes reports to GitHub Pages for badges.
-#  # ---------------------------
-#  publish-reports:
-#    if: github.ref == 'refs/heads/main'
-#    uses: ./.github/workflows/publish-reports.yml
-#    needs: [unit-tests, security-scan]
-#    with:
-#      service_name: ${{ github.event.repository.name }}
-#
-#  # ---------------------------
-#  # 9. Sends a summary of job statuses to a Slack channel at the end of a CI run.
-#  # ---------------------------
-#  notify:
-#    uses: ./.github/workflows/notify-slack.yml
-#    needs: [setup, code-quality, security-scan, unit-tests, integration-tests, quality-scan, docker-release, publish-reports]
-#    with:
-#      service_name: ${{ github.event.repository.name }}
-#      setup_status: ${{ needs.setup.result }}
-#      code_quality_status: ${{ needs.code-quality.result }}
-#      security_scan_status: ${{ needs.security-scan.result }}
-#      unit_tests_status: ${{ needs.unit-tests.result }}
-#      integration_tests_status: ${{ needs.integration-tests.result }}
-#      quality_scan_status: ${{ needs.quality-scan.result }}
-#      docker_release_status: ${{ needs.docker-release.result }}
-#      publish_reports_status: ${{ needs.publish-reports.result }}
+
+  # ---------------------------
+  # 7. Auto-bumps version, tags commit, retags image for release.
+  # ---------------------------
+  docker-release:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/docker-release.yml
+    needs:
+      [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
+
+  # ---------------------------
+  # 8. Sends a summary of job statuses to a Slack channel at the end of a CI run.
+  # ---------------------------
+  notify-slack:
+    uses: ./.github/workflows/notify-slack.yml
+    needs:
+      [
+        setup,
+        code-quality,
+        security-scan,
+        unit-tests,
+        integration-tests,
+        quality-scan,
+        docker-release,
+      ]
+    with:
+      service_name: ${{ github.event.repository.name }}
+      setup_status: ${{ needs.setup.result }}
+      code_quality_status: ${{ needs.code-quality.result }}
+      security_scan_status: ${{ needs.security-scan.result }}
+      unit_tests_status: ${{ needs.unit-tests.result }}
+      integration_tests_status: ${{ needs.integration-tests.result }}
+      quality_scan_status: ${{ needs.quality-scan.result }}
+      docker_release_status: ${{ needs.docker-release.result }}

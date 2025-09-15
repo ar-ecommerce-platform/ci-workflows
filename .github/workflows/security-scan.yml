@@ -20,9 +20,6 @@ on:
       gradle_cache_key:
         required: true
         type: string
-      run_security_scan:
-        type: boolean
-        default: true
     secrets:
       OWASP_API_KEY:
         required: true
@@ -39,22 +36,13 @@ jobs:
       SERVICE_IMAGE: ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
     steps:
       # ---------------------------
-      # 1. Skip workflow if disabled
-      # ---------------------------
-      - name: Check if security scan should run
-        if: ${{ !inputs.run_security_scan }}
-        run: |
-          echo "Security scan is disabled for this service, exiting..."
-          exit 0
-
-      # ---------------------------
-      # 2. Check out repository
+      # 1. Check out repository
       # ---------------------------
       - name: Checkout repository
         uses: actions/checkout@v5
 
       # ---------------------------
-      # 3. Set up Java 21
+      # 2. Set up Java 21
       # ---------------------------
       - name: Set up JDK
         uses: actions/setup-java@v3
@@ -63,7 +51,7 @@ jobs:
           java-version: "21"
 
       # ---------------------------
-      # 4. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
+      # 3. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
       #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
       #   - If not found → try restore-keys prefix for partial match
       #   - If still not found → Gradle downloads fresh, saved under key after job
@@ -78,7 +66,7 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
 
       # ---------------------------
-      # 5. Scans project dependencies for known vulnerabilities.
+      # 4. Scans project dependencies for known vulnerabilities.
       #    Fails the build if High/Critical issues are found (default threshold CVSS ≥ 7.0).
       # ---------------------------
       - name: Run OWASP Dependency Check
@@ -87,7 +75,7 @@ jobs:
           NVD_API_KEY: ${{ secrets.OWASP_API_KEY }}
 
       # ---------------------------
-      # 6. If build fails, upload report as feedback to find out why it failed (which dependency, severity, etc.).
+      # 5. If build fails, upload report as feedback to find out why it failed (which dependency, severity, etc.).
       # ---------------------------
       - name: Upload OWASP Reports
         if: always()
@@ -97,7 +85,7 @@ jobs:
           path: build/reports/owasp/${{ inputs.service_name }}
 
       # ---------------------------
-      # 7. Log in to GitHub Container registry
+      # 6. Log in to GitHub Container registry
       # ---------------------------
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -107,13 +95,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # ---------------------------
-      # 8. Pull test image
+      # 7. Pull test image
       # ---------------------------
       - name: Pull test image
         run: docker pull $SERVICE_IMAGE
 
       # ---------------------------
-      # 9. Run Snyk Container Scan on test image
+      # 8. Run Snyk Container Scan on test image
       # ---------------------------
       - name: Run Snyk Docker Action to test image
         uses: snyk/actions/docker@master
@@ -126,7 +114,7 @@ jobs:
           args: --file=Dockerfile --severity-threshold=high --sarif-file-output=snyk.sarif
 
       # ---------------------------
-      # 10. Upload Snyk Container Scan report
+      # 9. Upload Snyk Container Scan report
       # ---------------------------
       - name: Upload Snyk Reports
         if: always()
