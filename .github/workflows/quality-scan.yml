@@ -83,10 +83,16 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: coverage-${{ inputs.service_name }}
-          path: build/reports/jacoco/${{ inputs.service_name }}
+          path: build/reports/jacoco/${{ inputs.service_name }}/coverage.xml
 
       # ---------------------------
-      # 6. Run SonarCloud Analysis
+      # 6. Rebuild Project (needed for sonar.java.binaries)
+      # ---------------------------
+      - name: Build Project (No Tests)
+        run: ./gradlew build -x test --no-daemon
+
+      # ---------------------------
+      # 7. Run SonarCloud Analysis
       # ---------------------------
       - name: Run SonarCloud Analysis
         env:
