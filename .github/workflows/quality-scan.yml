@@ -76,6 +76,10 @@ jobs:
           key: ${{ inputs.gradle_cache_key }}
           restore-keys: gradle-${{ runner.os }}-
 
+      # Debug coverage path
+      - name: Verify Coverage Report Exists
+        run: ls -R build/reports/jacoco/${{ inputs.service_name }}
+
       # ---------------------------
       # 5. Download Jacoco XML for SonarCloud
       # ---------------------------
