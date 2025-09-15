@@ -87,7 +87,7 @@ jobs:
 
       # Debug coverage path
       - name: Verify Coverage Report Exists
-        run: ls -R build/reports/jacoco/${{ inputs.service_name }}
+        run: ls -R build/reports/jacoco/*
 
       # ---------------------------
       # 6. Rebuild Project (needed for sonar.java.binaries)
