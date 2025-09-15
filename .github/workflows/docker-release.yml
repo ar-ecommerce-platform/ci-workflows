@@ -38,6 +38,8 @@ jobs:
       # ---------------------------
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       # ---------------------------
       # 2. Get last Git tag (or start from v0.0.0 if none exist yet)
@@ -52,8 +54,13 @@ jobs:
       # 3. Get commits since last tag
       # ---------------------------
       - name: Get commits since last tag
+        id: get_commits
         run: |
-          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+          if [ "$LAST_TAG" == "v0.0.0" ]; then
+            COMMITS=$(git log --pretty=format:"%s")
+          else
+            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+          fi
           echo "COMMITS=$COMMITS" >> $GITHUB_ENV
 
       # ---------------------------
