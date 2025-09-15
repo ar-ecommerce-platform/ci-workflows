@@ -53,26 +53,27 @@ jobs:
       # ---------------------------
       - name: Get commits since last tag
         run: |
-          if [ "$LAST_TAG" == "v0.0.0" ]; then
-            COMMITS=$(git log --pretty=format:"%s")
-          else
-            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
-          fi
+          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
           echo "COMMITS=$COMMITS" >> $GITHUB_ENV
 
       # ---------------------------
       # 4. Determine version bump
       # - "BREAKING CHANGE" → major
       # - "feat:" → minor
-      # - "fix:" (or anything else) → patch
+      # - "fix:" → patch
       # ---------------------------
       - name: Determine version bump
+        id: determine_bump
         run: |
-          BUMP="patch"
-          if echo "$COMMITS" | grep -q "BREAKING CHANGE"; then
-            BUMP="major"
-          elif echo "$COMMITS" | grep -q "^feat:"; then
-            BUMP="minor"
+          BUMP="none"
+          if [[ -n "$COMMITS" ]]; then
+            if echo "$COMMITS" | grep -q "BREAKING CHANGE"; then
+              BUMP="major"
+            elif echo "$COMMITS" | grep -q "^feat:"; then
+              BUMP="minor"
+            elif echo "$COMMITS" | grep -q "^fix:"; then
+              BUMP="patch"
+            fi
           fi
           echo "BUMP=$BUMP" >> $GITHUB_ENV
 
@@ -81,8 +82,27 @@ jobs:
       # ---------------------------
       - name: Compute next version
         run: |
-          VERSION_PARTS=(${LAST_TAG//./ })
-          MAJOR=${VERSION_PARTS[0]#v}
+          if [ "$BUMP" == "none" ]; then
+            echo "No commits found to trigger a new version. Exiting gracefully."
+            exit 0
+          fi
+          
+          # Special handling for the very first release
+          if [ "$LAST_TAG" == "v0.0.0" ]; then
+            if [ "$BUMP" == "major" ]; then
+              NEXT_VERSION="v1.0.0"
+            elif [ "$BUMP" == "minor" ]; then
+              NEXT_VERSION="v0.1.0"
+            else
+              NEXT_VERSION="v0.0.1"
+            fi
+            echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
+            exit 0
+          fi
+          
+          # Standard version bumping logic
+          VERSION_PARTS=(${LAST_TAG//v/})
+          MAJOR=${VERSION_PARTS[0]}
           MINOR=${VERSION_PARTS[1]}
           PATCH=${VERSION_PARTS[2]}
 
@@ -92,20 +112,29 @@ jobs:
             patch) ((PATCH++)) ;;
           esac
 
-          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+          NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
       # ---------------------------
       # 6. Update version.txt
       # ---------------------------
       - name: Update version file
+        if: success() && env.NEXT_VERSION
         run: |
-          echo "$NEXT_VERSION" > version.txt
+          echo "${NEXT_VERSION#v}" > version.txt
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.txt
-          git diff --cached --quiet || git commit -m "chore(release): v$NEXT_VERSION [skip ci]"
-          git push
+          
+          if git diff --cached --quiet --exit-code; then
+            echo "No changes to commit. Skipping."
+          else
+            git commit -m "chore(release): $NEXT_VERSION [skip ci]"
+          fi
+
+          git tag "$NEXT_VERSION"
+          git push origin main
+          git push --tags
 
 #      # ---------------------------
 #      # 7. Log into GHCR
