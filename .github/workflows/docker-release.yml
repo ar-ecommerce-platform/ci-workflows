@@ -97,44 +97,45 @@ jobs:
           if [ "$BUMP" == "none" ]; then
             echo "No commits found to trigger a new version. Exiting gracefully."
             exit 0
-          fi
-
-          # Special handling for the very first release
-          if [ "$LAST_TAG" == "v0.0.0" ]; then
-            if [ "$BUMP" == "major" ]; then
-              NEXT_VERSION="v1.0.0"
-            elif [ "$BUMP" == "minor" ]; then
-              NEXT_VERSION="v0.1.0"
-            else
-              NEXT_VERSION="v0.0.1"
+          else
+            # Special handling for the very first release
+            if [ "$LAST_TAG" == "v0.0.0" ]; then
+              if [ "$BUMP" == "major" ]; then
+                NEXT_VERSION="v1.0.0"
+              elif [ "$BUMP" == "minor" ]; then
+                NEXT_VERSION="v0.1.0"
+              else
+                NEXT_VERSION="v0.0.1"
+              fi
+              echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
+              exit 0
             fi
+
+            # Strip 'v' from the tag
+            VERSION_NO_V="${LAST_TAG#v}"
+
+            # Split the version string into an array
+            IFS='.' read -r -a version_parts <<< "$VERSION_NO_V"
+
+            # Assign parts to individual variables, with a default of 0
+            MAJOR=${version_parts[0]:-0}
+            MINOR=${version_parts[1]:-0}
+            PATCH=${version_parts[2]:-0}
+
+            # Log the version before the bump
+            echo "Before bump: MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
+            echo "LAST_TAG=$LAST_TAG, BUMP=$BUMP"
+
+            # Increment the version based on the bump type
+            case $BUMP in
+              major) ((MAJOR++)); MINOR=0; PATCH=0 ;;
+              minor) ((MINOR++)); PATCH=0 ;;
+              patch) ((PATCH++)) ;;
+            esac
+
+            NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"
             echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
-            exit 0
           fi
-
-          # Strip 'v' and split
-          VERSION_NO_V="${LAST_TAG#v}"
-          echo "VERSION_NO_V='$VERSION_NO_V'"
-
-          # Split the version string into an array
-          IFS='.' read -r -a version_parts <<< "$VERSION_NO_V"
-
-          # Assign parts to individual variables, with a default of 0
-          MAJOR=${version_parts[0]:-0}
-          MINOR=${version_parts[1]:-0}
-          PATCH=${version_parts[2]:-0}
-
-          echo "Before bump: MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
-          echo "LAST_TAG=$LAST_TAG, BUMP=$BUMP"
-
-          case $BUMP in
-            major) ((MAJOR++)); MINOR=0; PATCH=0 ;;
-            minor) ((MINOR++)); PATCH=0 ;;
-            patch) ((PATCH++)) ;;
-          esac
-                    
-          NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"
-          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
       # ---------------------------
       # 6. Update version.txt
