@@ -132,6 +132,8 @@ jobs:
               minor) ((MINOR++)); PATCH=0 ;;
               patch) ((PATCH++)) ;;
             esac
+          
+            echo "After bump: MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
 
             NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"
             echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
