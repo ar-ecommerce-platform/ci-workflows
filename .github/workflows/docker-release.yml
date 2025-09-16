@@ -98,7 +98,7 @@ jobs:
             echo "No commits found to trigger a new version. Exiting gracefully."
             exit 0
           else
-            # Special handling for the very first release
+            # Special handling for the very first release, then exits to prevent further version calculations.
             if [ "$LAST_TAG" == "v0.0.0" ]; then
               if [ "$BUMP" == "major" ]; then
                 NEXT_VERSION="v1.0.0"
@@ -121,24 +121,6 @@ jobs:
             MAJOR=${version_parts[0]:-0}
             MINOR=${version_parts[1]:-0}
             PATCH=${version_parts[2]:-0}
-
-            # Log the version before the bump
-            echo "Before bump: MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
-            echo "LAST_TAG=$LAST_TAG, BUMP=$BUMP"
-            
-            # Check if the variables are numbers
-            if ! [[ "$MAJOR" =~ ^[0-9]+$ ]]; then
-              echo "MAJOR is not a number: $MAJOR"
-              exit 1
-            fi
-            if ! [[ "$MINOR" =~ ^[0-9]+$ ]]; then
-              echo "MINOR is not a number: $MINOR"
-              exit 1
-            fi
-            if ! [[ "$PATCH" =~ ^[0-9]+$ ]]; then
-              echo "PATCH is not a number: $PATCH"
-              exit 1
-            fi
             
             # Increment the version based on the bump type
             case $BUMP in
@@ -155,8 +137,6 @@ jobs:
                 PATCH=$((PATCH + 1))
                 ;;
             esac
-
-            echo "After bump: MAJOR=$MAJOR, MINOR=$MINOR, PATCH=$PATCH"
 
             NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"
             echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
@@ -179,30 +159,35 @@ jobs:
             git commit -m "chore(release): $NEXT_VERSION [skip ci]"
           fi
 
-          git tag "$NEXT_VERSION"
-
           git push origin HEAD
+
+      # ---------------------------
+      # 7. Tag and Push commit
+      # ---------------------------
+      - name: Tag commit
+        run: |
+          git tag -a "$NEXT_VERSION" -m "Release $NEXT_VERSION"
           git push origin "$NEXT_VERSION"
 
-#      # ---------------------------
-#      # 7. Log into GHCR
-#      # ---------------------------
-#      - name: Log into GHCR
-#        uses: docker/login-action@v3
-#        with:
-#          registry: ghcr.io
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
+      # ---------------------------
+      # 8. Log into GHCR
+      # ---------------------------
+      - name: Log into GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 #
 #      # ---------------------------
-#      # 8. Pull CI Image
+#      # 9. Pull CI Image
 #      # ---------------------------
 #      - name: Pull CI image
 #        run: |
 #          docker pull ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
 #
 #      # ---------------------------
-#      # 9. Retag image for release
+#      # 10. Retag image for release
 #      # ---------------------------
 #      - name: Retag image for release
 #        run: |
@@ -211,14 +196,6 @@ jobs:
 #
 #          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $LATEST_TAG
 #          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $VERSION_TAG
-#
-#      # ---------------------------
-#      # 10. Tag commit
-#      # ---------------------------
-#      - name: Tag commit
-#        run: |
-#          git tag -a "v$NEXT_VERSION" -m "Release v$NEXT_VERSION"
-#          git push origin "v$NEXT_VERSION"
 #
 #      # ---------------------------
 #      # 11. Push release image
