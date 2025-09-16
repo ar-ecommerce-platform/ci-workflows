@@ -115,15 +115,17 @@ jobs:
           # Strip 'v' and split
           VERSION_NO_V="${LAST_TAG#v}"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NO_V"
-          
+
           MAJOR=${MAJOR:-0}
           MINOR=${MINOR:-0}
           PATCH=${PATCH:-0}
-          
-          [[ $BUMP == "major" ]] && ((MAJOR++)) && MINOR=0 && PATCH=0
-          [[ $BUMP == "minor" ]] && ((MINOR++)) && PATCH=0
-          [[ $BUMP == "patch" ]] && ((PATCH++))
-          
+
+          case $BUMP in
+            major) ((MAJOR++)); MINOR=0; PATCH=0 ;;
+            minor) ((MINOR++)); PATCH=0 ;;
+            patch) ((PATCH++)) ;;
+          esac
+                    
           NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
