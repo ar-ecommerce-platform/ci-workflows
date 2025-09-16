@@ -114,6 +114,7 @@ jobs:
 
           # Strip 'v' and split
           VERSION_NO_V="${LAST_TAG#v}"
+          echo "VERSION_NO_V='$VERSION_NO_V'"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NO_V"
 
           MAJOR=${MAJOR:-0}
