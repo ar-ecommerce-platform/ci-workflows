@@ -115,9 +115,6 @@ jobs:
           # Standard version bumping logic
           VERSION_NO_V="${LAST_TAG#v}"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NO_V"
-          MAJOR=${VERSION_PARTS[0]}
-          MINOR=${VERSION_PARTS[1]}
-          PATCH=${VERSION_PARTS[2]}
           
           # Increment the correct part of the version based on the determined bump type
           # It also resets lower version numbers for major and minor bumps
