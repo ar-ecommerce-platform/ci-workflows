@@ -113,15 +113,27 @@ jobs:
           fi
 
           # Standard version bumping logic
-          VERSION_PARTS=(${LAST_TAG//v/})
+          VERSION_NO_V="${LAST_TAG#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NO_V"
           MAJOR=${VERSION_PARTS[0]}
           MINOR=${VERSION_PARTS[1]}
           PATCH=${VERSION_PARTS[2]}
-
+          
+          # Increment the correct part of the version based on the determined bump type
+          # It also resets lower version numbers for major and minor bumps
           case $BUMP in
-            major) ((MAJOR++)); MINOR=0; PATCH=0 ;;
-            minor) ((MINOR++)); PATCH=0 ;;
-            patch) ((PATCH++)) ;;
+            major) 
+              ((MAJOR++))    # Increment major version
+              MINOR=0        # Reset minor to 0
+              PATCH=0        # Reset patch to 0
+              ;;
+            minor) 
+              ((MINOR++))    # Increment minor version
+              PATCH=0        # Reset patch to 0
+              ;;
+            patch) 
+              ((PATCH++))    # Increment patch version
+              ;;
           esac
 
           NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"
