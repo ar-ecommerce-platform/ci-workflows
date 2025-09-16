@@ -61,7 +61,7 @@ jobs:
           else
             COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
           fi
-          
+
           {
             echo 'COMMITS<<EOF'
             echo "$COMMITS"
@@ -98,7 +98,7 @@ jobs:
             echo "No commits found to trigger a new version. Exiting gracefully."
             exit 0
           fi
-          
+
           # Special handling for the very first release
           if [ "$LAST_TAG" == "v0.0.0" ]; then
             if [ "$BUMP" == "major" ]; then
@@ -111,7 +111,7 @@ jobs:
             echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
             exit 0
           fi
-          
+
           # Standard version bumping logic
           VERSION_PARTS=(${LAST_TAG//v/})
           MAJOR=${VERSION_PARTS[0]}
@@ -137,7 +137,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.txt
-          
+
           if git diff --cached --quiet --exit-code; then
             echo "No changes to commit. Skipping."
           else
@@ -146,7 +146,6 @@ jobs:
 
           git tag "$NEXT_VERSION"
 
-#          git push origin main
           git push origin HEAD
           git push origin "$NEXT_VERSION"
 
