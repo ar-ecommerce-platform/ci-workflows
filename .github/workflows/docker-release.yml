@@ -61,7 +61,12 @@ jobs:
           else
             COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
           fi
-          echo "COMMITS=$COMMITS" >> $GITHUB_ENV
+          
+          {
+            echo 'COMMITS<<EOF'
+            echo "$COMMITS"
+            echo 'EOF'
+          } >> $GITHUB_ENV
 
       # ---------------------------
       # 4. Determine version bump
