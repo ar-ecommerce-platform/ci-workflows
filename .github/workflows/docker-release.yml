@@ -97,20 +97,18 @@ jobs:
           if [ "$BUMP" == "none" ]; then
             echo "No commits found to trigger a new version. Exiting gracefully."
             exit 0
-          else
-            # Special handling for the very first release, then exits to prevent further version calculations.
-            if [ "$LAST_TAG" == "v0.0.0" ]; then
-              if [ "$BUMP" == "major" ]; then
-                NEXT_VERSION="v1.0.0"
-              elif [ "$BUMP" == "minor" ]; then
-                NEXT_VERSION="v0.1.0"
-              else
-                NEXT_VERSION="v0.0.1"
-              fi
-              echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
-              exit 0
-            fi
+          fi
 
+          # Special handling for the very first release, then exits to prevent further version calculations.
+          if [ "$LAST_TAG" == "v0.0.0" ]; then
+            if [ "$BUMP" == "major" ]; then
+              NEXT_VERSION="v1.0.0"
+            elif [ "$BUMP" == "minor" ]; then
+              NEXT_VERSION="v0.1.0"
+            else
+              NEXT_VERSION="v0.0.1"
+            fi
+          else
             # Strip 'v' from the tag
             VERSION_NO_V="${LAST_TAG#v}"
 
@@ -139,8 +137,9 @@ jobs:
             esac
 
             NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"
-            echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
           fi
+
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
       # ---------------------------
       # 6. Update version.txt
@@ -178,29 +177,29 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-#
-#      # ---------------------------
-#      # 9. Pull CI Image
-#      # ---------------------------
-#      - name: Pull CI image
-#        run: |
-#          docker pull ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
-#
-#      # ---------------------------
-#      # 10. Retag image for release
-#      # ---------------------------
-#      - name: Retag image for release
-#        run: |
-#          LATEST_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
-#          VERSION_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:v$NEXT_VERSION
-#
-#          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $LATEST_TAG
-#          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $VERSION_TAG
-#
-#      # ---------------------------
-#      # 11. Push release image
-#      # ---------------------------
-#      - name: Push release image
-#        run: |
-#          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
-#          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:v$NEXT_VERSION
+
+      # ---------------------------
+      # 9. Pull CI Image
+      # ---------------------------
+      - name: Pull CI image
+        run: |
+          docker pull ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
+
+      # ---------------------------
+      # 10. Retag image for release
+      # ---------------------------
+      - name: Retag image for release
+        run: |
+          LATEST_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
+          VERSION_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:$NEXT_VERSION
+
+          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $LATEST_TAG
+          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $VERSION_TAG
+
+      # ---------------------------
+      # 11. Push release image
+      # ---------------------------
+      - name: Push release image
+        run: |
+          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
+          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:$NEXT_VERSION
