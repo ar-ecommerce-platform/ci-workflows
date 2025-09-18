@@ -60,6 +60,7 @@ jobs:
         id: build-payload
         run: |
           node <<'EOF'
+          const fs = require("fs");
           const statuses = {
             "Setup": process.env.SETUP,
             "Code Quality": process.env.CODE_QUALITY,
@@ -106,14 +107,14 @@ jobs:
             ]
           }`;
 
-          console.log(`payload<<EOF\n${payload}\nEOF`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload<<EOF\n${payload}\nEOF\n`);
           EOF
         env:
           SERVICE: ${{ inputs.service_name }}
           SETUP: ${{ inputs.setup_status }}
           CODE_QUALITY: ${{ inputs.code_quality_status }}
           SECURITY_SCAN: ${{ inputs.security_scan_status }}
-          UNIT_TESTS: ${{ inputs.unit_test_status }}
+          UNIT_TESTS: ${{ inputs.unit_tests_status }}
           INTEGRATION_TESTS: ${{ inputs.integration_tests_status }}
           QUALITY_SCAN: ${{ inputs.quality_scan_status }}
           DOCKER_RELEASE: ${{ inputs.docker_release_status }}
