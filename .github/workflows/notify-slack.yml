@@ -80,8 +80,8 @@ jobs:
             return `{ "type": "mrkdwn", "text": "*${name}:*\\n${emoji}" }`;
           });
 
-          // Determine overall workflow color: red if any failed, green otherwise
-          const anyFailed = Object.values(statuses).some(s => s === "failed");
+          // Determine overall workflow color: red if any failure, green otherwise
+          const anyFailed = Object.values(statuses).some(s => s === "failure");
           const color = anyFailed ? "#ff0000" : "#36a64f";
 
           // Build Slack message payload
@@ -107,7 +107,7 @@ jobs:
             ]
           }`;
 
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload<<EOF\n${payload}\nEOF\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload=${payload.replace(/\n/g, '')}\n`);
           EOF
         env:
           SERVICE: ${{ inputs.service_name }}
