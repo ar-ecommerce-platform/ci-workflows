@@ -158,14 +158,13 @@ jobs:
             git commit -m "chore(release): $NEXT_VERSION [skip ci]"
           fi
 
-          git push origin HEAD
-
       # ---------------------------
       # 7. Tag and Push commit
       # ---------------------------
       - name: Tag commit
         run: |
           git tag -a "$NEXT_VERSION" -m "Release $NEXT_VERSION"
+          git push origin HEAD
           git push origin "$NEXT_VERSION"
 
       # ---------------------------
@@ -183,7 +182,7 @@ jobs:
       # ---------------------------
       - name: Pull CI image
         run: |
-          docker pull ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
+          docker pull ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:${GITHUB_SHA}
 
       # ---------------------------
       # 10. Retag image for release
@@ -193,8 +192,8 @@ jobs:
           LATEST_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
           VERSION_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:$NEXT_VERSION
 
-          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $LATEST_TAG
-          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci $VERSION_TAG
+          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:${GITHUB_SHA} $LATEST_TAG
+          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:${GITHUB_SHA} $VERSION_TAG
 
       # ---------------------------
       # 11. Push release image

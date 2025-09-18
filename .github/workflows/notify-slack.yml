@@ -42,9 +42,6 @@ on:
       docker_release_status:
         required: true
         type: string
-      publish_reports_status:
-        required: true
-        type: string
     secrets:
       SLACK_WEBHOOK_URL:
         required: true
@@ -71,7 +68,6 @@ jobs:
             "Integration Tests": process.env.INTEGRATION_TESTS,
             "Quality Scan": process.env.QUALITY_SCAN,
             "Docker Release": process.env.DOCKER_RELEASE,
-            "Publish Reports": process.env.PUBLISH_REPORTS,
           };
 
           // Map each job status to an emoji
@@ -121,7 +117,6 @@ jobs:
           INTEGRATION_TESTS: ${{ inputs.integration_tests_status }}
           QUALITY_SCAN: ${{ inputs.quality_scan_status }}
           DOCKER_RELEASE: ${{ inputs.docker_release_status }}
-          PUBLISH_REPORTS: ${{ inputs.publish_reports_status }}
 
       # ---------------------------
       # 2. Send Slack Notification

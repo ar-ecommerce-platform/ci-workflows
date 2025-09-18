@@ -33,7 +33,7 @@ jobs:
       contents: read
       packages: read
     env:
-      SERVICE_IMAGE: ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci
+      SERVICE_IMAGE: ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:${GITHUB_SHA}
     steps:
       # ---------------------------
       # 1. Check out repository

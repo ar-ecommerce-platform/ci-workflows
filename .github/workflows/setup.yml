@@ -95,13 +95,22 @@ jobs:
       # ---------------------------
       - name: Set Docker Image Name
         id: image
-        run: echo "image=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:ci" >> "$GITHUB_OUTPUT"
+        run: |
+          IMAGE_NAME=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}
+          echo "image_sha=${IMAGE_NAME}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image_ci=${IMAGE_NAME}:ci" >> "$GITHUB_OUTPUT"
 
       # ---------------------------
-      # 8. Build, and tag, test image (:ci)
+      # 8. Build test image
       # ---------------------------
-      - name: Build and Tag Test Image
-        run: docker build -t ${{ steps.image.outputs.image }} .
+      - name: Build Image
+        run: docker build -t ${{ steps.image.outputs.image_sha }} .
+
+      # ---------------------------
+      # 9. Tag Image as :ci
+      # ---------------------------
+      - name: Tag Image as :ci
+        run: docker tag ${{ steps.image.outputs.image_sha }} ${{ steps.image.outputs.image_ci }}
 
       # ---------------------------
       # 9. Start the service
@@ -115,7 +124,7 @@ jobs:
           --health-interval=10s \
           --health-timeout=10s \
           --health-retries=15 \
-          ${{ steps.image.outputs.image }}
+          ${{ steps.image.outputs.image_sha }}
 
       # ---------------------------
       # 10. Wait for service to be healthy
@@ -130,4 +139,5 @@ jobs:
       # ---------------------------
       - name: Push Test Image
         run: |
-          docker push ${{ steps.image.outputs.image }}
+          docker push ${{ steps.image.outputs.image_sha }}
+          docker push ${{ steps.image.outputs.image_ci }}
