@@ -124,7 +124,12 @@ jobs:
   # 7. Auto-bumps version, tags commit, retags image for release.
   # ---------------------------
   docker-release:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' &&
+      needs.code-quality.result != 'failure' &&
+      needs.unit-tests.result != 'failure' &&
+      needs.integration-tests.result != 'failure' &&
+      needs.security-scan.result != 'failure' &&
+      needs.quality-scan.result != 'failure'
     uses: ./.github/workflows/docker-release.yml
     needs:
       [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
@@ -135,6 +140,7 @@ jobs:
   # 8. Sends a summary of job statuses to a Slack channel at the end of a CI run.
   # ---------------------------
   notify-slack:
+    if: always()
     uses: ./.github/workflows/notify-slack.yml
     needs:
       [
