@@ -79,6 +79,7 @@ jobs:
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+      image_sha: ${{ needs.setup.outputs.image_sha }}
     secrets:
       OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

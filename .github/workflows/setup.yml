@@ -22,6 +22,9 @@ on:
       gradle_cache_key:
         description: "Gradle cache key for downstream jobs"
         value: ${{ jobs.setup.outputs.gradle_cache_key }}
+      image_sha:
+        description: "Test image tagged with sha"
+        value: ${{ steps.image.outputs.image_sha }}
 
 jobs:
   setup:

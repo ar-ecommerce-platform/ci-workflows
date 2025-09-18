@@ -20,6 +20,9 @@ on:
       gradle_cache_key:
         required: true
         type: string
+      image_sha:
+        required: true
+        type: string
     secrets:
       OWASP_API_KEY:
         required: true
@@ -32,8 +35,6 @@ jobs:
     permissions:
       contents: read
       packages: read
-    env:
-      SERVICE_IMAGE: ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:${GITHUB_SHA}
     steps:
       # ---------------------------
       # 1. Check out repository
@@ -98,7 +99,7 @@ jobs:
       # 7. Pull test image
       # ---------------------------
       - name: Pull test image
-        run: docker pull $SERVICE_IMAGE
+        run: docker pull ${{ inputs.image_sha }}
 
       # ---------------------------
       # 8. Run Snyk Container Scan on test image
@@ -109,7 +110,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: $SERVICE_IMAGE
+          image: ${{ inputs.image_sha }}
           sarif: true
           args: --file=Dockerfile --severity-threshold=high --sarif-file-output=snyk.sarif
 
