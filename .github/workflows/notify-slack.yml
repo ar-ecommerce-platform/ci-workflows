@@ -30,7 +30,7 @@ on:
       security_scan_status:
         required: true
         type: string
-      unit_test_status:
+      unit_tests_status:
         required: true
         type: string
       integration_tests_status:
