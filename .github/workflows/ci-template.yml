@@ -43,6 +43,9 @@ on:
         required: false
       SNYK_TOKEN:
         required: false
+      SLACK_WEBHOOK_URL:
+        required: true
+
 jobs:
   # ---------------------------
   # 1. Sets up Gradle, builds the service artifact, and pushes a test Docker image.
@@ -151,3 +154,5 @@ jobs:
       integration_tests_status: ${{ needs.integration-tests.result }}
       quality_scan_status: ${{ needs.quality-scan.result }}
       docker_release_status: ${{ needs.docker-release.result }}
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.REPORTS_TRIGGER_TOKEN }}
