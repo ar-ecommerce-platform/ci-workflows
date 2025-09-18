@@ -124,6 +124,8 @@ jobs:
     uses: ./.github/workflows/docker-release.yml
     needs:
       [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
+    with:
+      service_name: ${{ github.event.repository.name }}
 
   # ---------------------------
   # 8. Sends a summary of job statuses to a Slack channel at the end of a CI run.
