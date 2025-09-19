@@ -105,23 +105,38 @@ jobs:
 
           // Build Slack message payload
           const payload = {
-          attachments: [
-            {
-              color,
-              text: `CI/CD Summary for ${process.env.SERVICE}`
-            }
-          ],
           blocks: [
             {
+              type: "header",
+              text: {
+                type: "plain_text",
+                text: `CI/CD Summary for ${process.env.SERVICE}`,
+                emoji: true
+              }
+            },
+            {
               type: "section",
-              fields: [
-                { type: "mrkdwn", text: `*Project:*\n${process.env.SERVICE}\n` },
-                { type: "mrkdwn", text: `*Docker Image:*\n${process.env.IMAGE}\n` },
-                { type: "mrkdwn", text: `*Commit Author:*\n${process.env.AUTHOR}\n` },
-                { type: "mrkdwn", text: `*Commit:*\n${process.env.COMMIT_MSG}\n` },
-                { type: "mrkdwn", text: `*Branch:*\n${process.env.BRANCH}\n` },
-                { type: "mrkdwn", text: `*Duration:*\n${process.env.DURATION}` }
-              ]
+              text: { type: "mrkdwn", text: `*Project:*\n${process.env.SERVICE}` }
+            },
+            {
+              type: "section",
+              text: { type: "mrkdwn", text: `*Docker Image:*\n${process.env.IMAGE}` }
+            },
+            {
+              type: "section",
+              text: { type: "mrkdwn", text: `*Commit Author:*\n${process.env.AUTHOR}` }
+            },
+            {
+              type: "section",
+              text: { type: "mrkdwn", text: `*Commit:*\n${process.env.COMMIT_MSG}` }
+            },
+            {
+              type: "section",
+              text: { type: "mrkdwn", text: `*Branch:*\n${process.env.BRANCH}` }
+            },
+            {
+              type: "section",
+              text: { type: "mrkdwn", text: `*Duration:*\n${process.env.DURATION}` }
             },
             {
               type: "divider"
