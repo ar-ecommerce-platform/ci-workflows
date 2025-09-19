@@ -90,14 +90,21 @@ jobs:
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*CI/CD Summary for ${process.env.SERVICE}* (${process.env.BRANCH}) - *Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} *by* ${process.env.AUTHOR}\n*Docker Image:* ${process.env.IMAGE}\n*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>`
+                text: `*[CI/CD] ${process.env.SERVICE}* (${process.env.BRANCH}) - *Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} *by* ${process.env.AUTHOR}\n*Docker Image:* ${process.env.IMAGE}\n`
               }
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*Jobs:*\nSetup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
+                text: `*Jobs:* Setup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
+              }
+            }
+            {
+              type: "section",
+              text: {
+                type: "mrdown"
+                text: `*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>`
               }
             }
           ];
