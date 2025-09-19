@@ -117,7 +117,7 @@ jobs:
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>` +
+                text: `*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>\n` +
                       `*Docker Image:* ${process.env.IMAGE}`
               }
             }
