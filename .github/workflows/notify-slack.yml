@@ -103,7 +103,7 @@ jobs:
             {
               type: "section",
               text: {
-                type: "mrdown",
+                type: "mrkdwn",
                 text: `*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>`
               }
             }
