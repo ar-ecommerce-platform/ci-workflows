@@ -60,6 +60,7 @@ jobs:
       - name: Calculate duration
         id: calc-duration
         run: |
+          START_TIME=$(( $(date +%s) - 90 ))
           END_TIME=$(date +%s)
           TOTAL=$((END_TIME - START_TIME))
           MINUTES=$((TOTAL / 60))
@@ -89,7 +90,7 @@ jobs:
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*CI/CD Summary for ${process.env.SERVICE}*\n*Branch:* ${process.env.BRANCH}\n*Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} by ${process.env.AUTHOR}\n*Docker Image:* ${process.env.IMAGE}\n*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>`
+                text: `*CI/CD Summary for ${process.env.SERVICE}* (${process.env.BRANCH}) - *Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} *by* ${process.env.AUTHOR}\n*Docker Image:* ${process.env.IMAGE}\n*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>`
               }
             },
             {
@@ -112,7 +113,7 @@ jobs:
         env:
           SERVICE: ${{ inputs.service_name }}
           IMAGE: ${{ inputs.image_sha }}
-          AUTHOR: ${{ github.author }}
+          AUTHOR: ${{ github.actor }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           BRANCH: ${{ github.ref_name }}
           DURATION: ${{ steps.calc-duration.outputs.duration }}
