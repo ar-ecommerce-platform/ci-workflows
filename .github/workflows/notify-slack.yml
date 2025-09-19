@@ -105,51 +105,55 @@ jobs:
 
           // Build Slack message payload
           const payload = {
-          blocks: [
+          attachments: [
             {
-              type: "header",
-              text: {
-                type: "plain_text",
-                text: `CI/CD Summary for ${process.env.SERVICE}`,
-                emoji: true
-              }
-            },
-            {
-              type: "section",
-              text: { type: "mrkdwn", text: `*Project:*\n${process.env.SERVICE}` }
-            },
-            {
-              type: "section",
-              text: { type: "mrkdwn", text: `*Docker Image:*\n${process.env.IMAGE}` }
-            },
-            {
-              type: "section",
-              text: { type: "mrkdwn", text: `*Commit Author:*\n${process.env.AUTHOR}` }
-            },
-            {
-              type: "section",
-              text: { type: "mrkdwn", text: `*Commit:*\n${process.env.COMMIT_MSG}` }
-            },
-            {
-              type: "section",
-              text: { type: "mrkdwn", text: `*Branch:*\n${process.env.BRANCH}` }
-            },
-            {
-              type: "section",
-              text: { type: "mrkdwn", text: `*Duration:*\n${process.env.DURATION}` }
-            },
-            {
-              type: "divider"
-            },
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `*Job | Status*\n${rows.join("\n")}`
-              }
+              color: anyFailed ? "#ff0000" : "#36a64f", // red if any job failed, green otherwise
+              blocks: [
+                {
+                  type: "header",
+                  text: {
+                    type: "plain_text",
+                    text: `CI/CD Summary for ${process.env.SERVICE}`,
+                    emoji: true
+                  }
+                },
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: `*Project:*\n${process.env.SERVICE}` }
+                },
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: `*Docker Image:*\n${process.env.IMAGE}` }
+                },
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: `*Commit Author:*\n${process.env.AUTHOR}` }
+                },
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: `*Commit:*\n${process.env.COMMIT_MSG}` }
+                },
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: `*Branch:*\n${process.env.BRANCH}` }
+                },
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: `*Duration:*\n${process.env.DURATION}` }
+                },
+                { type: "divider" },
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: `*Job | Status*\n${rows.join("\n")}`
+                  }
+                }
+              ]
             }
           ]
           };
+
 
           const payloadString = JSON.stringify(payload).replace(/\n/g, '');
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload=${payloadString}\n`);
