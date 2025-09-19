@@ -80,38 +80,37 @@ jobs:
           node <<'EOF'
           const fs = require("fs");
 
+          // Map job status to emoji
           const statusEmoji = (status) =>
             status === "success" ? "✅" :
             status === "skipped" ? "⏭" :
             "❌";
 
+          // List of all jobs
+          const allJobs = ["SETUP","CODE_QUALITY","SECURITY_SCAN","UNIT_TESTS","INTEGRATION_TESTS","QUALITY_SCAN","DOCKER_RELEASE"];
+
+          // Determine if any job failed
+          const anyFailed = allJobs.some(k => process.env[k] === "failure");
+
+          // Overall CI/CD run status
+          const runStatus = anyFailed ? "❌ CI/CD Run Failed" : "✅ CI/CD Run Passed";
+
+          // Build Slack message blocks
           const blocks = [
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*[CI/CD] ${process.env.SERVICE}* (${process.env.BRANCH}) - *Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} *by* ${process.env.AUTHOR}\n*Docker Image:* ${process.env.IMAGE}\n`
+                text: `*${runStatus}* - *${process.env.SERVICE}* (${process.env.BRANCH})\n*Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} *by* ${process.env.AUTHOR}\n*Docker Image:* ${process.env.IMAGE}`
               }
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*CI / Setup:* Setup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)}`
-              }
-            },
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `*Test:* Security Scan ${statusEmoji(process.env.SECURITY_SCAN)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Quality Scan ${statusEmoji(process.env.QUALITY_SCAN)}`
-              }
-            },
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: `*Deploy:* Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
+                text: `*Build:* Setup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)}\n` +
+                      `*Test:* Security Scan ${statusEmoji(process.env.SECURITY_SCAN)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Quality Scan ${statusEmoji(process.env.QUALITY_SCAN)}\n` +
+                      `*Deploy:* Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
               }
             },
             {
@@ -123,12 +122,11 @@ jobs:
             }
           ];
 
-          const anyFailed = ["SETUP","CODE_QUALITY","UNIT_TESTS","INTEGRATION_TESTS","DOCKER_RELEASE"]
-            .some(k => process.env[k] === "failure");
+          // Slack attachment color: red if any failed, green if all passed
           const color = anyFailed ? "#ff0000" : "#36a64f";
-
           const payload = { blocks, attachments: [{ color }] };
 
+          // Output payload for next step
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload=${JSON.stringify(payload)}\n`);
           EOF
         env:
