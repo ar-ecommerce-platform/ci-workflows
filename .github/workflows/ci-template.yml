@@ -154,6 +154,7 @@ jobs:
       ]
     with:
       service_name: ${{ github.event.repository.name }}
+      image_sha: ${{ needs.setup.outputs.image_sha }}
       setup_status: ${{ needs.setup.result }}
       code_quality_status: ${{ needs.code-quality.result }}
       security_scan_status: ${{ needs.security-scan.result }}
@@ -163,3 +164,5 @@ jobs:
       docker_release_status: ${{ needs.docker-release.result }}
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    env:
+      START_TIME: ${{ needs.setup.outputs.start_time }}

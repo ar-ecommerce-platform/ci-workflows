@@ -25,18 +25,23 @@ on:
       image_sha:
         description: "Test image tagged with SHA"
         value: ${{ jobs.setup.outputs.image_sha }}
+      start_time:
+        description: "Time workflow started"
+        value: ${{ jobs.setup.outputs.start_time }}
 
 jobs:
   setup:
     runs-on: ubuntu-latest
-    # ---------------------------
-    # Gradle cache key that will be used in other workflows
-    # ---------------------------
     outputs:
       gradle_cache_key: ${{ steps.set-key.outputs.key }}
       image_sha: ${{ steps.image.outputs.image_sha }}
+      start_time: ${{ steps.capture-time.outputs.start_time }}
 
     steps:
+      - name: Capture start time
+        id: capture-time
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+
       # ---------------------------
       # 1. Check out repository
       # ---------------------------

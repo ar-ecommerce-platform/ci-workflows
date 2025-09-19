@@ -21,6 +21,9 @@ on:
       service_name:
         required: true
         type: string
+      image_sha:
+        required: true
+        type: string
       setup_status:
         required: true
         type: string
@@ -51,6 +54,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Calculate duration
+        id: calc-duration
+        run: |
+          END_TIME=$(date +%s)
+          TOTAL=$((END_TIME - START_TIME))
+          MINUTES=$((TOTAL / 60))
+          SECONDS=$((TOTAL % 60))
+          if [ $MINUTES -gt 0 ]; then
+            echo "duration=${MINUTES}m ${SECONDS}s" >> $GITHUB_OUTPUT
+          else
+            echo "duration=${SECONDS}s" >> $GITHUB_OUTPUT
+          fi
+
       # ---------------------------
       # 1. Build Slack Payload (Dynamic JSON)
       #    - Loops through job statuses and assigns ✅, ⏭, ❌
@@ -61,56 +77,73 @@ jobs:
         run: |
           node <<'EOF'
           const fs = require("fs");
-          const statuses = {
-            "Setup": process.env.SETUP,
-            "Code Quality": process.env.CODE_QUALITY,
-            "Security Scan": process.env.SECURITY_SCAN,
-            "Unit Tests": process.env.UNIT_TESTS,
-            "Integration Tests": process.env.INTEGRATION_TESTS,
-            "Quality Scan": process.env.QUALITY_SCAN,
-            "Docker Release": process.env.DOCKER_RELEASE,
-          };
+
+          // Collect jobs and statuses
+          const jobs = [
+            ["Setup", process.env.SETUP],
+            ["Code Quality", process.env.CODE_QUALITY],
+            ["Security Scan", process.env.SECURITY_SCAN],
+            ["Unit Tests", process.env.UNIT_TESTS],
+            ["Integration Tests", process.env.INTEGRATION_TESTS],
+            ["Quality Scan", process.env.QUALITY_SCAN],
+            ["Docker Release", process.env.DOCKER_RELEASE],
+          ];
 
           // Map each job status to an emoji
-          const fields = Object.entries(statuses).map(([name, status]) => {
+          const rows = jobs.map(([name, status]) => {
             const emoji =
               status === "success" ? "✅" :
               status === "skipped" ? "⏭" :
               "❌ *FAILED*";
-            return `{ "type": "mrkdwn", "text": "*${name}:*\\n${emoji}" }`;
+            return `*${name}* | ${emoji}`;
           });
 
-          // Determine overall workflow color: red if any failure, green otherwise
-          const anyFailed = Object.values(statuses).some(s => s === "failure");
+          // Determine color: red if any failed, green otherwise
+          const anyFailed = jobs.some(([, s]) => s === "failed");
           const color = anyFailed ? "#ff0000" : "#36a64f";
 
           // Build Slack message payload
-          const payload = `{
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "*CI Workflow for ${process.env.SERVICE} finished with statuses:*"
-                }
-              },
-              {
-                "type": "section",
-                "fields": [${fields.join(",")}]
+          const payload = {
+          blocks: [
+            {
+              type: "section",
+              fields: [
+                { type: "mrkdwn", text: `*Project:*\n${process.env.SERVICE}` },
+                { type: "mrkdwn", text: `*Docker Image:*\n${process.env.IMAGE}` },
+                { type: "mrkdwn", text: `*Commit Author:*\n${process.env.AUTHOR}` },
+                { type: "mrkdwn", text: `*Commit:*\n${process.env.COMMIT_MSG}` },
+                { type: "mrkdwn", text: `*Branch:*\n${process.env.BRANCH}` },
+                { type: "mrkdwn", text: `*Duration:*\n${process.env.DURATION}` }
+              ]
+            },
+            {
+              type: "divider"
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Job | Status*\n${rows.join("\n")}`
               }
-            ],
-            "attachments": [
-              {
-                "color": "${color}",
-                "text": "Summary for ${process.env.SERVICE}"
-              }
-            ]
-          }`;
+            }
+          ],
+          attachments: [
+            {
+              color,
+              text: `CI/CD Summary for ${process.env.SERVICE}`
+            }
+           ]
+          };
 
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload=${payload.replace(/\n/g, '')}\n`);
           EOF
         env:
           SERVICE: ${{ inputs.service_name }}
+          IMAGE: ${{ inputs.image_sha }}
+          AUTHOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          BRANCH: ${{ github.ref_name }}
+          DURATION: ${{ steps.calc-duration.outputs.duration }}
           SETUP: ${{ inputs.setup_status }}
           CODE_QUALITY: ${{ inputs.code_quality_status }}
           SECURITY_SCAN: ${{ inputs.security_scan_status }}
