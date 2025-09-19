@@ -57,6 +57,7 @@ jobs:
       - name: Calculate duration
         id: calc-duration
         run: |
+          START_TIME=$(( $(date +%s) - 90 ))
           END_TIME=$(date +%s)
           TOTAL=$((END_TIME - START_TIME))
           MINUTES=$((TOTAL / 60))
