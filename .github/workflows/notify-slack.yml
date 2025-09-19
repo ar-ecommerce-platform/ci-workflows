@@ -136,7 +136,8 @@ jobs:
            ]
           };
 
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload=${payload.replace(/\n/g, '')}\n`);
+          const payloadString = JSON.stringify(payload).replace(/\n/g, '');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload=${payloadString}\n`);
           EOF
         env:
           SERVICE: ${{ inputs.service_name }}
