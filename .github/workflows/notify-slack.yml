@@ -105,15 +105,21 @@ jobs:
 
           // Build Slack message payload
           const payload = {
+          attachments: [
+            {
+              color,
+              text: `CI/CD Summary for ${process.env.SERVICE}`
+            }
+          ],
           blocks: [
             {
               type: "section",
               fields: [
-                { type: "mrkdwn", text: `*Project:*\n${process.env.SERVICE}` },
-                { type: "mrkdwn", text: `*Docker Image:*\n${process.env.IMAGE}` },
-                { type: "mrkdwn", text: `*Commit Author:*\n${process.env.AUTHOR}` },
-                { type: "mrkdwn", text: `*Commit:*\n${process.env.COMMIT_MSG}` },
-                { type: "mrkdwn", text: `*Branch:*\n${process.env.BRANCH}` },
+                { type: "mrkdwn", text: `*Project:*\n${process.env.SERVICE}\n` },
+                { type: "mrkdwn", text: `*Docker Image:*\n${process.env.IMAGE}\n` },
+                { type: "mrkdwn", text: `*Commit Author:*\n${process.env.AUTHOR}\n` },
+                { type: "mrkdwn", text: `*Commit:*\n${process.env.COMMIT_MSG}\n` },
+                { type: "mrkdwn", text: `*Branch:*\n${process.env.BRANCH}\n` },
                 { type: "mrkdwn", text: `*Duration:*\n${process.env.DURATION}` }
               ]
             },
@@ -127,13 +133,7 @@ jobs:
                 text: `*Job | Status*\n${rows.join("\n")}`
               }
             }
-          ],
-          attachments: [
-            {
-              color,
-              text: `CI/CD Summary for ${process.env.SERVICE}`
-            }
-           ]
+          ]
           };
 
           const payloadString = JSON.stringify(payload).replace(/\n/g, '');
