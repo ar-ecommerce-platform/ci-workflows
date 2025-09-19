@@ -97,7 +97,21 @@ jobs:
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*Jobs:* Setup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
+                text: `*CI / Setup:* Setup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)}`
+              }
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Test:* Security Scan ${statusEmoji(process.env.SECURITY_SCAN)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Quality Scan ${statusEmoji(process.env.QUALITY_SCAN)}`
+              }
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Deploy:* Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
               }
             },
             {
@@ -127,8 +141,10 @@ jobs:
           WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SETUP: ${{ inputs.setup_status }}
           CODE_QUALITY: ${{ inputs.code_quality_status }}
+          SECURITY_SCAN: ${{ inputs.security_scan_status }}
           UNIT_TESTS: ${{ inputs.unit_tests_status }}
           INTEGRATION_TESTS: ${{ inputs.integration_tests_status }}
+          QUALITY_SCAN: ${{ inputs.quality_scan_status }}
           DOCKER_RELEASE: ${{ inputs.docker_release_status }}
 
       # ---------------------------
