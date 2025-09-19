@@ -99,7 +99,7 @@ jobs:
                 type: "mrkdwn",
                 text: `*Jobs:* Setup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
               }
-            }
+            },
             {
               type: "section",
               text: {
