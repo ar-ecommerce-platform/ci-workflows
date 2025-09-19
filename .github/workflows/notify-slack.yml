@@ -101,7 +101,7 @@ jobs:
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*${runStatus}* - *${process.env.SERVICE}* (${process.env.BRANCH})\n*Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} *by* ${process.env.AUTHOR}\n*Docker Image:* ${process.env.IMAGE}`
+                text: `*${runStatus}* - *${process.env.SERVICE}* (${process.env.BRANCH}) - *Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} *by* ${process.env.AUTHOR}`
               }
             },
             {
@@ -117,7 +117,8 @@ jobs:
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>`
+                text: `*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>` +
+                      `*Docker Image:* ${process.env.IMAGE}`
               }
             }
           ];
