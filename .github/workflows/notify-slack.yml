@@ -54,10 +54,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ---------------------------
+      # 1. Calculate duration
+      # ---------------------------
       - name: Calculate duration
         id: calc-duration
         run: |
-          START_TIME=$(( $(date +%s) - 90 ))
           END_TIME=$(date +%s)
           TOTAL=$((END_TIME - START_TIME))
           MINUTES=$((TOTAL / 60))
@@ -69,9 +71,7 @@ jobs:
           fi
 
       # ---------------------------
-      # 1. Build Slack Payload (Dynamic JSON)
-      #    - Loops through job statuses and assigns ✅, ⏭, ❌
-      #    - Determines color: green if no failures, red if any failed
+      # 2. Build Slack payload
       # ---------------------------
       - name: Build Slack Payload
         id: build-payload
@@ -79,103 +79,52 @@ jobs:
           node <<'EOF'
           const fs = require("fs");
 
-          // Collect jobs and statuses
-          const jobs = [
-            ["Setup", process.env.SETUP],
-            ["Code Quality", process.env.CODE_QUALITY],
-            ["Security Scan", process.env.SECURITY_SCAN],
-            ["Unit Tests", process.env.UNIT_TESTS],
-            ["Integration Tests", process.env.INTEGRATION_TESTS],
-            ["Quality Scan", process.env.QUALITY_SCAN],
-            ["Docker Release", process.env.DOCKER_RELEASE],
+          const statusEmoji = (status) =>
+            status === "success" ? "✅" :
+            status === "skipped" ? "⏭" :
+            "❌";
+
+          const blocks = [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*CI/CD Summary for ${process.env.SERVICE}*\n*Branch:* ${process.env.BRANCH}\n*Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} by ${process.env.AUTHOR}\n*Docker Image:* ${process.env.IMAGE}\n*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>`
+              }
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Jobs:*\nSetup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
+              }
+            }
           ];
 
-          // Map each job status to an emoji
-          const rows = jobs.map(([name, status]) => {
-            const emoji =
-              status === "success" ? "✅" :
-              status === "skipped" ? "⏭" :
-              "❌ *FAILED*";
-            return `*${name}* | ${emoji}`;
-          });
-
-          // Determine color: red if any failed, green otherwise
-          const anyFailed = jobs.some(([, s]) => s === "failed");
+          const anyFailed = ["SETUP","CODE_QUALITY","UNIT_TESTS","INTEGRATION_TESTS","DOCKER_RELEASE"]
+            .some(k => process.env[k] === "failure");
           const color = anyFailed ? "#ff0000" : "#36a64f";
 
-          // Build Slack message payload
-          const payload = {
-          attachments: [
-            {
-              color: anyFailed ? "#ff0000" : "#36a64f", // red if any job failed, green otherwise
-              blocks: [
-                {
-                  type: "header",
-                  text: {
-                    type: "plain_text",
-                    text: `CI/CD Summary for ${process.env.SERVICE}`,
-                    emoji: true
-                  }
-                },
-                {
-                  type: "section",
-                  text: { type: "mrkdwn", text: `*Project:*\n${process.env.SERVICE}` }
-                },
-                {
-                  type: "section",
-                  text: { type: "mrkdwn", text: `*Docker Image:*\n${process.env.IMAGE}` }
-                },
-                {
-                  type: "section",
-                  text: { type: "mrkdwn", text: `*Commit Author:*\n${process.env.AUTHOR}` }
-                },
-                {
-                  type: "section",
-                  text: { type: "mrkdwn", text: `*Commit:*\n${process.env.COMMIT_MSG}` }
-                },
-                {
-                  type: "section",
-                  text: { type: "mrkdwn", text: `*Branch:*\n${process.env.BRANCH}` }
-                },
-                {
-                  type: "section",
-                  text: { type: "mrkdwn", text: `*Duration:*\n${process.env.DURATION}` }
-                },
-                { type: "divider" },
-                {
-                  type: "section",
-                  text: {
-                    type: "mrkdwn",
-                    text: `*Job | Status*\n${rows.join("\n")}`
-                  }
-                }
-              ]
-            }
-          ]
-          };
+          const payload = { blocks, attachments: [{ color }] };
 
-
-          const payloadString = JSON.stringify(payload).replace(/\n/g, '');
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload=${payloadString}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload=${JSON.stringify(payload)}\n`);
           EOF
         env:
           SERVICE: ${{ inputs.service_name }}
           IMAGE: ${{ inputs.image_sha }}
-          AUTHOR: ${{ github.actor }}
+          AUTHOR: ${{ github.author }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           BRANCH: ${{ github.ref_name }}
           DURATION: ${{ steps.calc-duration.outputs.duration }}
+          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SETUP: ${{ inputs.setup_status }}
           CODE_QUALITY: ${{ inputs.code_quality_status }}
-          SECURITY_SCAN: ${{ inputs.security_scan_status }}
           UNIT_TESTS: ${{ inputs.unit_tests_status }}
           INTEGRATION_TESTS: ${{ inputs.integration_tests_status }}
-          QUALITY_SCAN: ${{ inputs.quality_scan_status }}
           DOCKER_RELEASE: ${{ inputs.docker_release_status }}
 
       # ---------------------------
-      # 2. Send Slack Notification
-      #    - Posts the JSON payload from step 1 to Slack
+      # 3. Send Slack notification
       # ---------------------------
       - name: Send Slack Notification
         uses: slackapi/slack-github-action@v2.1.1
