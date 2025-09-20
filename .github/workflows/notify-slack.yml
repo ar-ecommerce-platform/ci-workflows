@@ -24,6 +24,9 @@ on:
       image_sha:
         required: true
         type: string
+      start_time:
+        required: false
+        type: string
       setup_status:
         required: true
         type: string
@@ -60,11 +63,18 @@ jobs:
       - name: Calculate duration
         id: calc-duration
         run: |
-          START_TIME=$(( $(date +%s) - 90 ))
+          if [ -z "${{ inputs.start_time }}" ]; then
+            echo "No start_time provided — using now as start time"
+            START_TIME=$(date +%s)
+          else
+            START_TIME=${{ inputs.start_time }}
+          fi
+          
           END_TIME=$(date +%s)
           TOTAL=$((END_TIME - START_TIME))
           MINUTES=$((TOTAL / 60))
           SECONDS=$((TOTAL % 60))
+          
           if [ $MINUTES -gt 0 ]; then
             echo "duration=${MINUTES}m ${SECONDS}s" >> $GITHUB_OUTPUT
           else
