@@ -119,7 +119,7 @@ jobs:
               text: {
                 type: "mrkdwn",
                 text: `*Build:* Setup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)}\n` +
-                     + `*Test:* Security Scan ${statusEmoji(process.env.SECURITY_SCAN)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Quality Scan ${statusEmoji(process.env.QUALITY_SCAN)}\n` +
+                      `*Test:* Security Scan ${statusEmoji(process.env.SECURITY_SCAN)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Quality Scan ${statusEmoji(process.env.QUALITY_SCAN)}\n` +
                       `*Deploy:* Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
               }
             },
