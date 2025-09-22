@@ -42,6 +42,10 @@ jobs:
         id: capture-time
         run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
 
+      - name: Echo the Git ref
+        run: |
+          echo "The GitHub ref is: ${{ github.ref }}"
+
       # ---------------------------
       # 1. Check out repository
       # ---------------------------
