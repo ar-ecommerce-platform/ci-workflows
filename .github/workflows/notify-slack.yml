@@ -81,6 +81,16 @@ jobs:
             echo "duration=${SECONDS}s" >> $GITHUB_OUTPUT
           fi
 
+      - name: Log Job Statuses
+        run: |
+          echo "setup_status: ${{ inputs.setup_status }}"
+          echo "code_quality_status: ${{ inputs.code_quality_status }}"
+          echo "security_scan_status: ${{ inputs.security_scan_status }}"
+          echo "unit_tests_status: ${{ inputs.unit_tests_status }}"
+          echo "integration_tests_status: ${{ inputs.integration_tests_status }}"
+          echo "quality_scan_status: ${{ inputs.quality_scan_status }}"
+          echo "docker_release_status: ${{ inputs.docker_release_status }}"
+
       # ---------------------------
       # 2. Build Slack payload
       # ---------------------------
