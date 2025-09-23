@@ -124,7 +124,12 @@ jobs:
   # 7. Auto-bumps version, tags commit, retags image for release.
   # ---------------------------
   docker-release:
-    if: github.ref == 'refs/heads/main' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    if: github.ref == 'refs/heads/main' &&
+      (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped') &&
+      (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped') &&
+      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped') &&
+      (needs.quality-scan.result == 'success' || needs.quality-scan.result == 'skipped') &&
+      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
     uses: ./.github/workflows/docker-release.yml
     needs:
       [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
