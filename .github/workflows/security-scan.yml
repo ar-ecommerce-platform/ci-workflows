@@ -66,6 +66,12 @@ jobs:
           key: ${{ inputs.gradle_cache_key }}
           restore-keys: gradle-${{ runner.os }}-
 
+      - name: Cache Dependency-Check Data
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/dependency-check-data
+          key: dependency-check-data-${{ hashFiles('**/*.gradle*') }}
+
       # ---------------------------
       # 4. Scans project dependencies for known vulnerabilities.
       #    Fails the build if High/Critical issues are found (default threshold CVSS ≥ 7.0).
