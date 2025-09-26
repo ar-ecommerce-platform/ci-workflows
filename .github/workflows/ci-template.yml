@@ -45,6 +45,10 @@ on:
         required: false
       SLACK_WEBHOOK_URL:
         required: true
+      OSSINDEX_USERNAME:
+        required: true
+      OSSINDEX_TOKEN:
+        required: true
 
 jobs:
   # ---------------------------
@@ -83,6 +87,8 @@ jobs:
     secrets:
       OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
+      OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
 
   # ---------------------------
   # 4. Runs Unit Tests
