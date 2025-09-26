@@ -80,6 +80,10 @@ jobs:
           else
             echo "duration=${SECONDS}s" >> $GITHUB_OUTPUT
           fi
+          
+      - name: Echo the Git ref
+        run: |
+          echo "The GitHub ref is: ${{ github.ref }}"
 
       - name: Log Job Statuses
         run: |
