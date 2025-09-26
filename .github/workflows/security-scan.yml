@@ -32,6 +32,9 @@ on:
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    env:
+      OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
+      OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
     permissions:
       contents: read
       packages: read
@@ -71,6 +74,13 @@ jobs:
         with:
           path: ~/.gradle/dependency-check-data
           key: dependency-check-data-${{ hashFiles('**/*.gradle*') }}
+
+      - name: Check logs
+        run: ./gradlew dependencyCheckAnalyze --info
+        env:
+          NVD_API_KEY: ${{ secrets.OWASP_API_KEY }}
+          OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
+          OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
 
       # ---------------------------
       # 4. Scans project dependencies for known vulnerabilities.

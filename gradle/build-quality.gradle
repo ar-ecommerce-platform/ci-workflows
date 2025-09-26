@@ -38,6 +38,13 @@ dependencyCheck {
     nvd {
         apiKey = System.getenv("NVD_API_KEY")
     }
+    analyzers {
+        ossIndex {
+            enabled = true
+            username = project.findProperty("ossindexUsername") ?: System.getenv("OSSINDEX_USERNAME")
+            password = project.findProperty("ossindexPassword") ?: System.getenv("OSSINDEX_TOKEN")
+        }
+    }
 }
 
 // ---------------------------
