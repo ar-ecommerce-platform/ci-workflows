@@ -87,36 +87,36 @@ jobs:
 
       - name: Debug each condition separately
         run: |
-          echo "code-quality: ${{ needs.code-quality.result }}"
-          if [[ "${{ needs.code-quality.result }}" == "success" || "${{ needs.code-quality.result }}" == "skipped" ]]; then
+          echo "code-quality: ${{ inputs.code_quality_status }}"
+          if [[ "${{ inputs.code_quality_status }}" == "success" || "${{ inputs.code_quality_status }}" == "skipped" ]]; then
             echo "✅ code-quality condition passed"
           else
             echo "❌ code-quality condition failed"
           fi
 
-          echo "security-scan: ${{ needs.security-scan.result }}"
-          if [[ "${{ needs.security-scan.result }}" == "success" || "${{ needs.security-scan.result }}" == "skipped" ]]; then
+          echo "security-scan: ${{ inputs.security_scan_status }}"
+          if [[ "${{ inputs.security_scan_status }}" == "success" || "${{ inputs.security_scan_status }}" == "skipped" ]]; then
             echo "✅ security-scan condition passed"
           else
             echo "❌ security-scan condition failed"
           fi
 
-          echo "unit-tests: ${{ needs.unit-tests.result }}"
-          if [[ "${{ needs.unit-tests.result }}" == "success" || "${{ needs.unit-tests.result }}" == "skipped" ]]; then
+          echo "unit-tests: ${{ inputs.unit_tests_status }}"
+          if [[ "${{ inputs.unit_tests_status }}" == "success" || "${{ inputs.unit_tests_status }}" == "skipped" ]]; then
             echo "✅ unit-tests condition passed"
           else
             echo "❌ unit-tests condition failed"
           fi
 
-          echo "quality-scan: ${{ needs.quality-scan.result }}"
-          if [[ "${{ needs.quality-scan.result }}" == "success" || "${{ needs.quality-scan.result }}" == "skipped" ]]; then
+          echo "quality-scan: ${{ inputs.quality_scan_status }}"
+          if [[ "${{ inputs.quality_scan_status }}" == "success" || "${{ inputs.quality_scan_status }}" == "skipped" ]]; then
             echo "✅ quality-scan condition passed"
           else
             echo "❌ quality-scan condition failed"
           fi
 
-          echo "integration-tests: ${{ needs.integration-tests.result }}"
-          if [[ "${{ needs.integration-tests.result }}" == "success" || "${{ needs.integration-tests.result }}" == "skipped" ]]; then
+          echo "integration-tests: ${{ inputs.integration_tests_status }}"
+          if [[ "${{ inputs.integration_tests_status }}" == "success" || "${{ inputs.integration_tests_status }}" == "skipped" ]]; then
             echo "✅ integration-tests condition passed"
           else
             echo "❌ integration-tests condition failed"
