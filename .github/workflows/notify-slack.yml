@@ -85,16 +85,24 @@ jobs:
         run: |
           echo "The GitHub ref is: ${{ github.ref }}"
 
-      - name: Log Job Statuses
+      - name: Debug docker-release condition
         run: |
-          echo "setup_status: ${{ inputs.setup_status }}"
-          echo "code_quality_status: ${{ inputs.code_quality_status }}"
-          echo "security_scan_status: ${{ inputs.security_scan_status }}"
-          echo "unit_tests_status: ${{ inputs.unit_tests_status }}"
-          echo "integration_tests_status: ${{ inputs.integration_tests_status }}"
-          echo "quality_scan_status: ${{ inputs.quality_scan_status }}"
-          echo "docker_release_status: ${{ inputs.docker_release_status }}"
+          echo "code-quality:       ${{ needs.code-quality.result }}"
+          echo "security-scan:      ${{ needs.security-scan.result }}"
+          echo "unit-tests:         ${{ needs.unit-tests.result }}"
+          echo "quality-scan:       ${{ needs.quality-scan.result }}"
+          echo "integration-tests:  ${{ needs.integration-tests.result }}"
 
+          if ([[ "${{ needs.code-quality.result }}" == "success" || "${{ needs.code-quality.result }}" == "skipped" ]]) &&
+             ([[ "${{ needs.security-scan.result }}" == "success" || "${{ needs.security-scan.result }}" == "skipped" ]]) &&
+             ([[ "${{ needs.unit-tests.result }}" == "success" || "${{ needs.unit-tests.result }}" == "skipped" ]]) &&
+             ([[ "${{ needs.quality-scan.result }}" == "success" || "${{ needs.quality-scan.result }}" == "skipped" ]]) &&
+             ([[ "${{ needs.integration-tests.result }}" == "success" || "${{ needs.integration-tests.result }}" == "skipped" ]]); then
+            echo "✅ Condition evaluated to TRUE"
+          else
+            echo "❌ Condition evaluated to FALSE"
+          fi
+      
       # ---------------------------
       # 2. Build Slack payload
       # ---------------------------
