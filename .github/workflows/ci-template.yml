@@ -131,8 +131,6 @@ jobs:
   # 0. test workflow
   # ---------------------------
   test-if-statement:
-    needs:
-      [ code-quality, quality-scan, security-scan, unit-tests, integration-tests ]
     if: (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped' || needs.code-quality.result == null) &&
       (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped' || needs.security-scan.result == null) &&
       (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped' || needs.unit-tests.result == null) &&
