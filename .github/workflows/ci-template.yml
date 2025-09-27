@@ -119,7 +119,7 @@ jobs:
   quality-scan:
     if: ${{ inputs.run_quality_scan && inputs.run_unit_tests }}
     uses: ./.github/workflows/quality-scan.yml
-    needs: [setup, unit-tests]
+    needs: [ setup, unit-tests ]
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
@@ -127,10 +127,22 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 
+  check-dependencies-complete:
+    needs:
+      [ code-quality, quality-scan, security-scan, unit-tests, integration-tests ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log
+        run: |
+          echo "dependencies completed"
+
   # ---------------------------
   # 0. test workflow
   # ---------------------------
   test-if-statement:
+    needs:
+      [ check-dependencies-complete ]
     if: (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped' || needs.code-quality.result == null) &&
       (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped' || needs.security-scan.result == null) &&
       (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped' || needs.unit-tests.result == null) &&
@@ -150,7 +162,7 @@ jobs:
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
     uses: ./.github/workflows/docker-release.yml
     needs:
-      [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
+      [ code-quality, quality-scan, security-scan, unit-tests, integration-tests ]
     with:
       service_name: ${{ github.event.repository.name }}
 
