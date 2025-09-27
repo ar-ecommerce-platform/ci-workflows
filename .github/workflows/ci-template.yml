@@ -131,14 +131,14 @@ jobs:
   # 0. test workflow
   # ---------------------------
   test-if-statement:
+    needs:
+      [ code-quality, quality-scan, security-scan, unit-tests, integration-tests ]
     if: (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped' || needs.code-quality.result == null) &&
       (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped' || needs.security-scan.result == null) &&
       (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped' || needs.unit-tests.result == null) &&
       (needs.quality-scan.result == 'success' || needs.quality-scan.result == 'skipped' || needs.quality-scan.result == null) &&
       (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped' || needs.integration-tests.result == null)
     uses: ./.github/workflows/test-if-statement.yml
-    needs:
-      [ code-quality, quality-scan, security-scan, unit-tests, integration-tests ]
 
   # ---------------------------
   # 7. Auto-bumps version, tags commit, retags image for release.
