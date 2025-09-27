@@ -85,24 +85,44 @@ jobs:
         run: |
           echo "The GitHub ref is: ${{ github.ref }}"
 
-      - name: Debug docker-release condition
+      - name: Debug each condition separately
         run: |
-          echo "code-quality:       ${{ needs.code-quality.result }}"
-          echo "security-scan:      ${{ needs.security-scan.result }}"
-          echo "unit-tests:         ${{ needs.unit-tests.result }}"
-          echo "quality-scan:       ${{ needs.quality-scan.result }}"
-          echo "integration-tests:  ${{ needs.integration-tests.result }}"
-
-          if ([[ "${{ needs.code-quality.result }}" == "success" || "${{ needs.code-quality.result }}" == "skipped" ]]) &&
-             ([[ "${{ needs.security-scan.result }}" == "success" || "${{ needs.security-scan.result }}" == "skipped" ]]) &&
-             ([[ "${{ needs.unit-tests.result }}" == "success" || "${{ needs.unit-tests.result }}" == "skipped" ]]) &&
-             ([[ "${{ needs.quality-scan.result }}" == "success" || "${{ needs.quality-scan.result }}" == "skipped" ]]) &&
-             ([[ "${{ needs.integration-tests.result }}" == "success" || "${{ needs.integration-tests.result }}" == "skipped" ]]); then
-            echo "✅ Condition evaluated to TRUE"
+          echo "code-quality: ${{ needs.code-quality.result }}"
+          if [[ "${{ needs.code-quality.result }}" == "success" || "${{ needs.code-quality.result }}" == "skipped" ]]; then
+            echo "✅ code-quality condition passed"
           else
-            echo "❌ Condition evaluated to FALSE"
+            echo "❌ code-quality condition failed"
           fi
-      
+
+          echo "security-scan: ${{ needs.security-scan.result }}"
+          if [[ "${{ needs.security-scan.result }}" == "success" || "${{ needs.security-scan.result }}" == "skipped" ]]; then
+            echo "✅ security-scan condition passed"
+          else
+            echo "❌ security-scan condition failed"
+          fi
+
+          echo "unit-tests: ${{ needs.unit-tests.result }}"
+          if [[ "${{ needs.unit-tests.result }}" == "success" || "${{ needs.unit-tests.result }}" == "skipped" ]]; then
+            echo "✅ unit-tests condition passed"
+          else
+            echo "❌ unit-tests condition failed"
+          fi
+
+          echo "quality-scan: ${{ needs.quality-scan.result }}"
+          if [[ "${{ needs.quality-scan.result }}" == "success" || "${{ needs.quality-scan.result }}" == "skipped" ]]; then
+            echo "✅ quality-scan condition passed"
+          else
+            echo "❌ quality-scan condition failed"
+          fi
+
+          echo "integration-tests: ${{ needs.integration-tests.result }}"
+          if [[ "${{ needs.integration-tests.result }}" == "success" || "${{ needs.integration-tests.result }}" == "skipped" ]]; then
+            echo "✅ integration-tests condition passed"
+          else
+            echo "❌ integration-tests condition failed"
+          fi
+
+
       # ---------------------------
       # 2. Build Slack payload
       # ---------------------------
