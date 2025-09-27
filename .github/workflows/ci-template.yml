@@ -127,16 +127,20 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 
+  # ---------------------------
+  # 0.5. Gate Job to wait for all preceding optional jobs
+  # ---------------------------
   check-dependencies-complete:
-    if: always()
     needs:
       [ code-quality, quality-scan, security-scan, unit-tests, integration-tests ]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Log
-        run: |
-          echo "dependencies completed"
+    if: always()
+    uses: ./.github/workflows/check-dependencies-complete.yml
+    with:
+      code_quality_status: ${{ needs.code-quality.result }}
+      quality_scan_status: ${{ needs.quality-scan.result }}
+      security_scan_status: ${{ needs.security-scan.result }}
+      unit_tests_status: ${{ needs.unit-tests.result }}
+      integration_tests_status: ${{ needs.integration-tests.result }}
 
   # ---------------------------
   # 0. test workflow
@@ -144,11 +148,7 @@ jobs:
   test-if-statement:
     needs:
       [ check-dependencies-complete ]
-    if: (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped' || needs.code-quality.result == null) &&
-      (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped' || needs.security-scan.result == null) &&
-      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped' || needs.unit-tests.result == null) &&
-      (needs.quality-scan.result == 'success' || needs.quality-scan.result == 'skipped' || needs.quality-scan.result == null) &&
-      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped' || needs.integration-tests.result == null)
+    if: success()
     uses: ./.github/workflows/test-if-statement.yml
 
   # ---------------------------

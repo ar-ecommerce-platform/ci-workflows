@@ -1,0 +1,55 @@
+name: Check Dependencies Complete
+
+on:
+  workflow_call:
+    inputs:
+      code_quality_status:
+        type: string
+        required: true
+      quality_scan_status:
+        type: string
+        required: true
+      security_scan_status:
+        type: string
+        required: true
+      unit_tests_status:
+        type: string
+        required: true
+      integration_tests_status:
+        type: string
+        required: true
+
+jobs:
+  check-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate Upstream Job Results
+        run: |
+          echo "Evaluating results of all preceding jobs..."
+          
+          # Collect all statuses into an array for easy iteration
+          JOB_STATUSES=(
+            "${{ inputs.code_quality_status }}"
+            "${{ inputs.quality_scan_status }}"
+            "${{ inputs.security_scan_status }}"
+            "${{ inputs.unit_tests_status }}"
+            "${{ inputs.integration_tests_status }}"
+          )
+
+          FAILURE_DETECTED=false
+          
+          for status in "${JOB_STATUSES[@]}"; do
+            # Check for failure or cancellation (the status for a cancelled job is 'cancelled')
+            if [[ "$status" == "failure" || "$status" == "cancelled" ]]; then
+              echo "🔴 FAILURE DETECTED! Job with status '$status' prevents continuation."
+              FAILURE_DETECTED=true
+              break # Exit loop immediately upon failure
+            fi
+          done
+
+          if [ "$FAILURE_DETECTED" = true ]; then
+            # Exit with 1 will cause this reusable workflow (and job) to FAIL
+            exit 1 
+          else
+            echo "🟢 All required dependencies passed or were intentionally skipped."
+          fi
