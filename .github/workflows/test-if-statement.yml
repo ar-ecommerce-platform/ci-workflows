@@ -1,0 +1,12 @@
+name: Test If Statement
+
+on:
+  workflow_call:
+
+jobs:
+  test-if-statement:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log
+        run: |
+          echo "Inside."
