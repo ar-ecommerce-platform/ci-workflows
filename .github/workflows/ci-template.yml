@@ -150,21 +150,22 @@ jobs:
     uses: ./.github/workflows/test-if-statement.yml
     needs:
       [ check-dependencies-complete ]
+
   # ---------------------------
   # 7. Auto-bumps version, tags commit, retags image for release.
   # ---------------------------
-#  docker-release:
-#    if: github.ref == 'refs/heads/main' &&
-#      (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped') &&
-#      (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped') &&
-#      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped') &&
-#      (needs.quality-scan.result == 'success' || needs.quality-scan.result == 'skipped') &&
-#      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
-#    uses: ./.github/workflows/docker-release.yml
-#    needs:
-#      [ code-quality, quality-scan, security-scan, unit-tests, integration-tests ]
-#    with:
-#      service_name: ${{ github.event.repository.name }}
+  docker-release:
+    if: github.ref == 'refs/heads/main' &&
+      (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped') &&
+      (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped') &&
+      (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'skipped') &&
+      (needs.quality-scan.result == 'success' || needs.quality-scan.result == 'skipped') &&
+      (needs.integration-tests.result == 'success' || needs.integration-tests.result == 'skipped')
+    uses: ./.github/workflows/docker-release.yml
+    needs:
+      [ code-quality, quality-scan, security-scan, unit-tests, integration-tests ]
+    with:
+      service_name: ${{ github.event.repository.name }}
 
   # ---------------------------
   # 8. Sends a summary of job statuses to a Slack channel at the end of a CI run.
