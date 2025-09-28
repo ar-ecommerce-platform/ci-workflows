@@ -145,17 +145,17 @@ jobs:
   # ---------------------------
   # 0. test workflow
   # ---------------------------
-  test-if-statement:
-    if: always() && needs.check-dependencies-complete.result == 'success'
-    uses: ./.github/workflows/test-if-statement.yml
-    needs:
-      [ check-dependencies-complete ]
+#  test-if-statement:
+#    if: always() && needs.check-dependencies-complete.result == 'success'
+#    uses: ./.github/workflows/test-if-statement.yml
+#    needs:
+#      [ check-dependencies-complete ]
 
   # ---------------------------
   # 7. Auto-bumps version, tags commit, retags image for release.
   # ---------------------------
   docker-release:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && always() && needs.check-dependencies-complete.result == 'success'
     uses: ./.github/workflows/docker-release.yml
     needs:
       [ check-dependencies-complete ]
