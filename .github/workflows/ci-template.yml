@@ -7,7 +7,7 @@
 #   Invoked by services via "workflow_call".
 #
 # Notes:
-#   - "publish" job only runs for commits/merges on main to prevent accidental releases.
+#   - "docker-release" job only runs for commits/merges on main to prevent accidental releases.
 #   - Jobs (code quality, security scan, tests) can be toggled via workflow inputs
 #   - Jobs are dependency-aware and stop running later jobs if earlier ones fail (fail fast).
 # ------------------------------------------------------------------------------
@@ -119,22 +119,21 @@ jobs:
   quality-scan:
     if: ${{ inputs.run_quality_scan && inputs.run_unit_tests }}
     uses: ./.github/workflows/quality-scan.yml
-    needs: [ setup, unit-tests ]
+    needs: [setup, unit-tests]
     with:
       service_name: ${{ github.event.repository.name }}
       gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-
   # ---------------------------
   # 0.5. Gate Job to wait for all preceding optional jobs
   # ---------------------------
-  check-dependencies-complete:
+  check-dependencies:
     needs:
-      [ code-quality, quality-scan, security-scan, unit-tests, integration-tests ]
+      [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
     if: always()
-    uses: ./.github/workflows/check-dependencies-complete.yml
+    uses: ./.github/workflows/check-dependencies.yml
     with:
       code_quality_status: ${{ needs.code-quality.result }}
       quality_scan_status: ${{ needs.quality-scan.result }}
@@ -143,22 +142,12 @@ jobs:
       integration_tests_status: ${{ needs.integration-tests.result }}
 
   # ---------------------------
-  # 0. test workflow
-  # ---------------------------
-#  test-if-statement:
-#    if: always() && needs.check-dependencies-complete.result == 'success'
-#    uses: ./.github/workflows/test-if-statement.yml
-#    needs:
-#      [ check-dependencies-complete ]
-
-  # ---------------------------
   # 7. Auto-bumps version, tags commit, retags image for release.
   # ---------------------------
   docker-release:
-    if: github.ref == 'refs/heads/main' && always() && needs.check-dependencies-complete.result == 'success'
+    if: github.ref == 'refs/heads/main' && always() && needs.check-dependencies.result == 'success'
     uses: ./.github/workflows/docker-release.yml
-    needs:
-      [ check-dependencies-complete ]
+    needs: [check-dependencies]
     with:
       service_name: ${{ github.event.repository.name }}
 

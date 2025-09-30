@@ -69,12 +69,12 @@ jobs:
           else
             START_TIME=${{ inputs.start_time }}
           fi
-          
+
           END_TIME=$(date +%s)
           TOTAL=$((END_TIME - START_TIME))
           MINUTES=$((TOTAL / 60))
           SECONDS=$((TOTAL % 60))
-          
+
           if [ $MINUTES -gt 0 ]; then
             echo "duration=${MINUTES}m ${SECONDS}s" >> $GITHUB_OUTPUT
           else
@@ -121,7 +121,6 @@ jobs:
           else
             echo "❌ integration-tests condition failed"
           fi
-
 
       # ---------------------------
       # 2. Build Slack payload

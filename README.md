@@ -11,6 +11,10 @@ ci-workflows/
 ├── .github/
 │   ├── actions/        # Composite actions (e.g., wait-for-health)
 │   └── workflows/      # All shared CI/CD workflow YAMLs
+├── gradle/
+│   ├── checkstyle/               # Checkstyle config (XML rules)
+│   │   └── checkstyle.xml
+│   └── build-quality.gradle      # Shared Gradle config (Spotless, Checkstyle, OWASP, Snyk, JaCoCo)
 ├── .gitignore
 └── README.md
 ```
@@ -19,17 +23,18 @@ ci-workflows/
 
 ## 📋 Available Workflows
 
-| Workflow              | Purpose                                                                                  |
-|-----------------------|------------------------------------------------------------------------------------------|
-| **CI Template**       | Template workflow that all services will call                                            |
-| **Setup**             | Builds the service artifact, pushes a test (`:ci`) Docker image, and verifies it starts with a smoke test. |
-| **Code Quality**      | Runs Spotless and Checkstyle to enforce code style & conventions.                        |
-| **Security Scan**     | Runs OWASP Dependency Check and Snyk container scan.                                     |
-| **Unit Tests**        | Runs unit tests and uploads coverage reports as artifacts.                               |
-| **Integration Tests** | Spins up services + runs integration tests.                                              |
-| **Quality Scan**      | SonarCloud analysis for bugs, smells, coverage.                                          |
-| **Publish**           | Auto-bumps version, tags commit, retags image for release.                               |
-| **Notify Slack**      | Sends CI summary to Slack.                                                               |
+| Workflow               | Purpose                                                                                                    |
+|------------------------|------------------------------------------------------------------------------------------------------------|
+| **CI Template**        | Template workflow that all services will use.                                                              |
+| **Setup**              | Builds the service artifact, pushes a test (`:ci`) Docker image, and verifies it starts with a smoke test. |
+| **Code Quality**       | Runs Spotless and Checkstyle to enforce code style & conventions.                                          |
+| **Security Scan**      | Runs OWASP Dependency Check and Snyk container scan.                                                       |
+| **Unit Tests**         | Runs unit tests and uploads coverage reports as artifacts.                                                 |
+| **Integration Tests**  | Spins up services + runs integration tests.                                                                |
+| **Quality Scan**       | SonarCloud analysis for bugs, smells, coverage.                                                            |
+| **Check Dependencies** | Verifies all required jobs passed/skipped before continuing.                                               |
+| **Docker Release**     | Auto-bumps version, tags commit, retags image for release.                                                 |
+| **Notify Slack**       | Sends CI summary to Slack.                                                                                 |
 
 ---
 
@@ -53,9 +58,14 @@ jobs:
       service_name: config-server
       run_integration_tests: false # Skip integration tests if not needed
     secrets:
-      OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }} # Used for OWASP Dependency Check
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Required for SonarCloud analysis
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Default token for creating tags/releases
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}           # Default GitHub token (tags, releases)
+      REPORTS_TRIGGER_TOKEN: ${{ secrets.REPORTS_TRIGGER_TOKEN }} # Triggers reporting workflow
+      OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}         # OWASP Dependency Check API
+      OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }} # OSS Index auth (user)
+      OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}       # OSS Index auth (token)
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}             # SonarCloud analysis
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}               # Snyk container scanning
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # Slack notifications
 ```
 
 ---
@@ -83,6 +93,6 @@ jobs:
 6. **Scalability**
     - Works for multiple microservices in the platform.
     - New services can plug in easily with the same template.
-    - Optional steps (integration tests, Code Quality) allow flexible workflows.
+    - Optional steps allow flexible workflows.
 
 

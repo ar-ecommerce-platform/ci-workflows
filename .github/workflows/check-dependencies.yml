@@ -1,4 +1,16 @@
-name: Check Dependencies Complete
+# ------------------------------------------------------------------------------
+# Workflow: Check Dependencies
+# Purpose:
+#     Check the status of the upstream jobs.
+#
+# Trigger:
+#   Invoked by services via "workflow_call".
+#
+# Notes:
+#   - If ANY upstream job failed or was cancelled → this workflow fails.
+#   - If ALL upstream jobs passed or were skipped → this workflow succeeds.
+# ------------------------------------------------------------------------------
+name: Check Dependencies
 
 on:
   workflow_call:
@@ -20,13 +32,16 @@ on:
         required: true
 
 jobs:
-  check-status:
+  check-dependencies:
     runs-on: ubuntu-latest
     steps:
+      # ---------------------------
+      # 1. Checks status of jobs. Fail fast if any job == failure or cancelled.
+      # ---------------------------
       - name: Evaluate Upstream Job Results
         run: |
           echo "Evaluating results of all preceding jobs..."
-          
+
           # Collect all statuses into an array for easy iteration
           JOB_STATUSES=(
             "${{ inputs.code_quality_status }}"
@@ -37,19 +52,18 @@ jobs:
           )
 
           FAILURE_DETECTED=false
-          
+
           for status in "${JOB_STATUSES[@]}"; do
-            # Check for failure or cancellation (the status for a cancelled job is 'cancelled')
+            # Check for failure or cancellation
             if [[ "$status" == "failure" || "$status" == "cancelled" ]]; then
               echo "🔴 FAILURE DETECTED! Job with status '$status' prevents continuation."
               FAILURE_DETECTED=true
-              break # Exit loop immediately upon failure
+              break
             fi
           done
 
           if [ "$FAILURE_DETECTED" = true ]; then
-            # Exit with 1 will cause this reusable workflow (and job) to FAIL
-            exit 1 
+            exit 1 # Fail this workflow → blocks downstream jobs
           else
             echo "🟢 All required dependencies passed or were intentionally skipped."
           fi

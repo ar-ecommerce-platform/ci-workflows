@@ -8,6 +8,7 @@
 #         Invoked by other workflows via "workflow_call".
 #
 # Notes:
+#   If never tagged before then it auto sets at 0.1.0, elses
 #   - Version bump follows Conventional Commits:
 #       feat:            → minor
 #       fix:             → patch
@@ -53,15 +54,10 @@ jobs:
       # ---------------------------
       # 3. Get commits since last tag
       # ---------------------------
-      - name: Get commits since last tag
-        id: get_commits
+      - name: Get commits since last tag (only if not first release)
+        if: env.LAST_TAG != 'v0.0.0'
         run: |
-          if [ "$LAST_TAG" == "v0.0.0" ]; then
-            COMMITS=$(git log --pretty=format:"%s")
-          else
-            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
-          fi
-
+          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
           {
             echo 'COMMITS<<EOF'
             echo "$COMMITS"
@@ -75,8 +71,13 @@ jobs:
       # - "fix:" → patch
       # ---------------------------
       - name: Determine version bump
-        id: determine_bump
         run: |
+          if [ -z "$LAST_TAG" ]; then
+            # First release → v0.1.0
+            echo "NEXT_VERSION=v0.1.0" >> $GITHUB_ENV
+            exit 0
+          fi
+
           BUMP="none"
           if [[ -n "$COMMITS" ]]; then
             if echo "$COMMITS" | grep -q "BREAKING CHANGE"; then
@@ -99,15 +100,12 @@ jobs:
             exit 0
           fi
 
-          # Special handling for the very first release, then exits to prevent further version calculations.
           if [ "$LAST_TAG" == "v0.0.0" ]; then
-            if [ "$BUMP" == "major" ]; then
-              NEXT_VERSION="v1.0.0"
-            elif [ "$BUMP" == "minor" ]; then
-              NEXT_VERSION="v0.1.0"
-            else
-              NEXT_VERSION="v0.0.1"
-            fi
+            case $BUMP in
+              major) NEXT_VERSION="v1.0.0" ;;
+              minor) NEXT_VERSION="v0.1.0" ;;
+              patch) NEXT_VERSION="v0.0.1" ;;
+            esac
           else
             # Strip 'v' from the tag
             VERSION_NO_V="${LAST_TAG#v}"
@@ -122,18 +120,9 @@ jobs:
             
             # Increment the version based on the bump type
             case $BUMP in
-              major)
-                MAJOR=$((MAJOR + 1))
-                MINOR=0
-                PATCH=0
-                ;;
-              minor)
-                MINOR=$((MINOR + 1))
-                PATCH=0
-                ;;
-              patch)
-                PATCH=$((PATCH + 1))
-                ;;
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH + 1)) ;;
             esac
 
             NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"

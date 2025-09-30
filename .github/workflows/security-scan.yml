@@ -87,12 +87,12 @@ jobs:
       # 4. Scans project dependencies for known vulnerabilities.
       #    Fails the build if High/Critical issues are found (default threshold CVSS ≥ 7.0).
       # ---------------------------
-#      - name: Run OWASP Dependency Check
-#        run: ./gradlew dependencyCheckAnalyze
-#        env:
-#          NVD_API_KEY: ${{ secrets.OWASP_API_KEY }}
-#          OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
-#          OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
+      #      - name: Run OWASP Dependency Check
+      #        run: ./gradlew dependencyCheckAnalyze
+      #        env:
+      #          NVD_API_KEY: ${{ secrets.OWASP_API_KEY }}
+      #          OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
+      #          OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
 
       # ---------------------------
       # 5. If build fails, upload report as feedback to find out why it failed (which dependency, severity, etc.).
