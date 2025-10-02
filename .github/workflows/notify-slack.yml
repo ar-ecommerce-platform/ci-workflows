@@ -81,47 +81,6 @@ jobs:
             echo "duration=${SECONDS}s" >> $GITHUB_OUTPUT
           fi
 
-      - name: Echo the Git ref
-        run: |
-          echo "The GitHub ref is: ${{ github.ref }}"
-
-      - name: Debug each condition separately
-        run: |
-          echo "code-quality: ${{ inputs.code_quality_status }}"
-          if [[ "${{ inputs.code_quality_status }}" == "success" || "${{ inputs.code_quality_status }}" == "skipped" ]]; then
-            echo "✅ code-quality condition passed"
-          else
-            echo "❌ code-quality condition failed"
-          fi
-
-          echo "security-scan: ${{ inputs.security_scan_status }}"
-          if [[ "${{ inputs.security_scan_status }}" == "success" || "${{ inputs.security_scan_status }}" == "skipped" ]]; then
-            echo "✅ security-scan condition passed"
-          else
-            echo "❌ security-scan condition failed"
-          fi
-
-          echo "unit-tests: ${{ inputs.unit_tests_status }}"
-          if [[ "${{ inputs.unit_tests_status }}" == "success" || "${{ inputs.unit_tests_status }}" == "skipped" ]]; then
-            echo "✅ unit-tests condition passed"
-          else
-            echo "❌ unit-tests condition failed"
-          fi
-
-          echo "quality-scan: ${{ inputs.quality_scan_status }}"
-          if [[ "${{ inputs.quality_scan_status }}" == "success" || "${{ inputs.quality_scan_status }}" == "skipped" ]]; then
-            echo "✅ quality-scan condition passed"
-          else
-            echo "❌ quality-scan condition failed"
-          fi
-
-          echo "integration-tests: ${{ inputs.integration_tests_status }}"
-          if [[ "${{ inputs.integration_tests_status }}" == "success" || "${{ inputs.integration_tests_status }}" == "skipped" ]]; then
-            echo "✅ integration-tests condition passed"
-          else
-            echo "❌ integration-tests condition failed"
-          fi
-
       # ---------------------------
       # 2. Build Slack payload
       # ---------------------------

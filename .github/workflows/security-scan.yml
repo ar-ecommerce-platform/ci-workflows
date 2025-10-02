@@ -70,32 +70,28 @@ jobs:
           key: ${{ inputs.gradle_cache_key }}
           restore-keys: gradle-${{ runner.os }}-
 
+      # ---------------------------
+      # 4. Searches GitHub Actions cache storage for an entry matching dependency-check-data
+      # ---------------------------
       - name: Cache Dependency-Check Data
         uses: actions/cache@v4
         with:
           path: ~/.gradle/dependency-check-data
           key: dependency-check-data-${{ hashFiles('**/*.gradle*') }}
 
-      - name: Run OWASP Dependency Check with Logs
-        run: ./gradlew dependencyCheckAnalyze --info
+      # ---------------------------
+      # 5. Scans project dependencies for known vulnerabilities.
+      #    Fails the build if High/Critical issues are found (default threshold CVSS ≥ 7.0).
+      # ---------------------------
+      - name: Run OWASP Dependency Check
+        run: ./gradlew dependencyCheckAnalyze
         env:
           NVD_API_KEY: ${{ secrets.OWASP_API_KEY }}
           OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
           OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
 
       # ---------------------------
-      # 4. Scans project dependencies for known vulnerabilities.
-      #    Fails the build if High/Critical issues are found (default threshold CVSS ≥ 7.0).
-      # ---------------------------
-      #      - name: Run OWASP Dependency Check
-      #        run: ./gradlew dependencyCheckAnalyze
-      #        env:
-      #          NVD_API_KEY: ${{ secrets.OWASP_API_KEY }}
-      #          OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
-      #          OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
-
-      # ---------------------------
-      # 5. If build fails, upload report as feedback to find out why it failed (which dependency, severity, etc.).
+      # 6. If build fails, upload report as feedback to find out why it failed (which dependency, severity, etc.).
       # ---------------------------
       - name: Upload OWASP Reports
         if: always()
@@ -105,7 +101,7 @@ jobs:
           path: build/reports/owasp/${{ inputs.service_name }}
 
       # ---------------------------
-      # 6. Log in to GitHub Container registry
+      # 7. Log in to GitHub Container registry
       # ---------------------------
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -115,13 +111,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # ---------------------------
-      # 7. Pull test image
+      # 8. Pull test image
       # ---------------------------
       - name: Pull test image
         run: docker pull ${{ inputs.image_sha }}
 
       # ---------------------------
-      # 8. Run Snyk Container Scan on test image
+      # 9. Run Snyk Container Scan on test image
       # ---------------------------
       - name: Run Snyk Docker Action to test image
         uses: snyk/actions/docker@master
@@ -134,7 +130,7 @@ jobs:
           args: --file=Dockerfile --severity-threshold=high --sarif-file-output=snyk.sarif
 
       # ---------------------------
-      # 9. Upload Snyk Container Scan report
+      # 10. Upload Snyk Container Scan report
       # ---------------------------
       - name: Upload Snyk Reports
         if: always()
