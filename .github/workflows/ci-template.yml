@@ -189,6 +189,5 @@ jobs:
       integration_tests_status: ${{ needs.integration-tests.result }}
       quality_scan_status: ${{ needs.quality-scan.result }}
       docker_release_status: ${{ needs.docker-release.result }}
-      start_time: ${{ needs.setup.outputs.start_time }}
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

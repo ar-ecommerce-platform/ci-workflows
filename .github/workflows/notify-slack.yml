@@ -24,9 +24,6 @@ on:
       image_sha:
         required: true
         type: string
-      start_time:
-        required: false
-        type: string
       setup_status:
         required: true
         type: string
@@ -60,29 +57,34 @@ jobs:
       # ---------------------------
       # 1. Calculate duration
       # ---------------------------
-      - name: Calculate duration
+      - name: Calculate accurate duration via GitHub API
         id: calc-duration
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
         run: |
-          # Use provided start_time (from setup workflow)
-          START_TIME=${{ inputs.start_time }}
-          END_TIME=$(date +%s)
-          TOTAL=$((END_TIME - START_TIME))
+          response=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/${{ github.repository }}/actions/runs/$RUN_ID")
 
-          if [ $TOTAL -lt 0 ]; then
-            TOTAL=0
-          fi
+          start=$(echo "$response" | jq -r '.run_started_at')
+          end=$(echo "$response" | jq -r '.updated_at')
 
-          MINUTES=$((TOTAL / 60))
-          SECONDS=$((TOTAL % 60))
+          start_epoch=$(date -d "$start" +%s)
+          end_epoch=$(date -d "$end" +%s)
+          total=$((end_epoch - start_epoch))
 
-          if [ $MINUTES -gt 0 ]; then
-            DURATION="${MINUTES}m ${SECONDS}s"
+          minutes=$((total / 60))
+          seconds=$((total % 60))
+
+          if [ $minutes -gt 0 ]; then
+            duration="${minutes}m ${seconds}s"
           else
-            DURATION="${SECONDS}s"
+            duration="${seconds}s"
           fi
 
-          echo "duration=${DURATION}" >> "$GITHUB_OUTPUT"
-
+          echo "duration=$duration" >> "$GITHUB_OUTPUT"
+          
       # ---------------------------
       # 2. Build Slack payload
       # ---------------------------
