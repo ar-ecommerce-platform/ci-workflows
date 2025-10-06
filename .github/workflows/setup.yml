@@ -40,7 +40,7 @@ jobs:
     steps:
       - name: Capture start time
         id: capture-time
-        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+        run: echo "start_time=$(date +%s)" >> "$GITHUB_OUTPUT"
 
       # ---------------------------
       # 1. Check out repository

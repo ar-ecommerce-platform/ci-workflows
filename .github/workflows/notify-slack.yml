@@ -63,23 +63,25 @@ jobs:
       - name: Calculate duration
         id: calc-duration
         run: |
-          if [ -z "${{ inputs.start_time }}" ]; then
-            echo "No start_time provided — using now as start time"
-            START_TIME=$(date +%s)
-          else
-            START_TIME=${{ inputs.start_time }}
-          fi
-
+          # Use provided start_time (from setup workflow)
+          START_TIME=${{ inputs.start_time }}
           END_TIME=$(date +%s)
           TOTAL=$((END_TIME - START_TIME))
+
+          if [ $TOTAL -lt 0 ]; then
+            TOTAL=0
+          fi
+
           MINUTES=$((TOTAL / 60))
           SECONDS=$((TOTAL % 60))
 
           if [ $MINUTES -gt 0 ]; then
-            echo "duration=${MINUTES}m ${SECONDS}s" >> $GITHUB_OUTPUT
+            DURATION="${MINUTES}m ${SECONDS}s"
           else
-            echo "duration=${SECONDS}s" >> $GITHUB_OUTPUT
+            DURATION="${SECONDS}s"
           fi
+
+          echo "duration=${DURATION}" >> "$GITHUB_OUTPUT"
 
       # ---------------------------
       # 2. Build Slack payload
