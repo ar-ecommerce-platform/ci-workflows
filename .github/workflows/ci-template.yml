@@ -155,7 +155,8 @@ jobs:
   # 8. Uploads all CI reports (unit tests, integration tests, security scans, coverage) to test report repo.
   # ---------------------------
   test-reports:
-    if: github.ref == 'refs/heads/main' && always() && needs.check-dependencies.result == 'success'
+    # if: github.ref == 'refs/heads/main' && always() && needs.check-dependencies.result == 'success'
+    if: always() && needs.check-dependencies.result == 'success'
     needs: [check-dependencies]
     uses: ./.github/workflows/test-reports.yml
     with:
