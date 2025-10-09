@@ -35,7 +35,7 @@ on:
         type: boolean
         default: true
     secrets:
-      REPORTS_TRIGGER_TOKEN:
+      PAT_REPORTS_TOKEN:
         required: true
       OWASP_API_KEY:
         required: true
@@ -162,7 +162,7 @@ jobs:
     with:
       service_name: ${{ github.event.repository.name }}
     secrets:
-      REPORTS_TRIGGER_TOKEN: ${{ secrets.REPORTS_TRIGGER_TOKEN }}
+      PAT_REPORTS_TOKEN: ${{ secrets.PAT_REPORTS_TOKEN }}
 
   # ---------------------------
   # 9. Sends a summary of job statuses to a Slack channel at the end of a CI run.
