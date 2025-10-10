@@ -72,7 +72,7 @@ jobs:
 | Secret                | Required        | Used In                          | Condition (Input Flag)         |
 |------------------------|-----------------|----------------------------------|--------------------------------|
 | `GITHUB_TOKEN`         | ✅ Always       | Tagging commits, pushing releases | Always provided by GitHub      |
-| `REPORTS_TRIGGER_TOKEN`| ✅ Always       |    Token for pushing reports    | Always                         |
+| `PAT_REPORTS_TOKEN`| ✅ Always       |    Token for pushing reports    | Always                         |
 | `SLACK_WEBHOOK_URL`    | ✅ Always       | Slack notifications               | Always                         |
 | `SONAR_TOKEN`          | ⚠️ Conditional | SonarCloud analysis               | `run_quality_scan: true`       |
 | `OWASP_API_KEY`        | ⚠️ Conditional | OWASP Dependency Check (NVD feed) | `run_security_scan: true`      |
