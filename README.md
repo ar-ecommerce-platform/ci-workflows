@@ -58,7 +58,7 @@ jobs:
       run_integration_tests: false # Input to skip integration tests
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}           # Default GitHub token (tags, releases)
-      REPORTS_TRIGGER_TOKEN: ${{ secrets.REPORTS_TRIGGER_TOKEN }} # Triggers reporting workflow
+      PAT_REPORTS_TOKEN: ${{ secrets.PAT_REPORTS_TOKEN }} # Token for pushing reports
       OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}         # OWASP Dependency Check API
       OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }} # OSS Index auth (user)
       OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}       # OSS Index auth (token)
@@ -72,7 +72,7 @@ jobs:
 | Secret                | Required        | Used In                          | Condition (Input Flag)         |
 |------------------------|-----------------|----------------------------------|--------------------------------|
 | `GITHUB_TOKEN`         | ✅ Always       | Tagging commits, pushing releases | Always provided by GitHub      |
-| `REPORTS_TRIGGER_TOKEN`| ✅ Always       | Reporting workflow trigger        | Always                         |
+| `REPORTS_TRIGGER_TOKEN`| ✅ Always       |    Token for pushing reports    | Always                         |
 | `SLACK_WEBHOOK_URL`    | ✅ Always       | Slack notifications               | Always                         |
 | `SONAR_TOKEN`          | ⚠️ Conditional | SonarCloud analysis               | `run_quality_scan: true`       |
 | `OWASP_API_KEY`        | ⚠️ Conditional | OWASP Dependency Check (NVD feed) | `run_security_scan: true`      |
