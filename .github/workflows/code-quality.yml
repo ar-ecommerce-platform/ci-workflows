@@ -1,0 +1,70 @@
+# ------------------------------------------------------------------------------
+# Workflow: Code Quality
+# Purpose:
+#   Runs Spotless Check and Checkstyle
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - Spotless Check: Ensures Java files follow formatting rules (indentation, braces, imports, whitespace).
+#   - Checkstyle: Ensures Java files follow coding standards and conventions (naming, Javadoc, imports, spacing).
+# ------------------------------------------------------------------------------
+name: Code Quality
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      gradle_cache_key:
+        required: true
+        type: string
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # ---------------------------
+      # 1. Check out repository
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # ---------------------------
+      # 2. Set up Java 21
+      # ---------------------------
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Debug Gradle Cache Key Input
+        run: |
+          echo "gradle_cache_key input: '${{ inputs.gradle_cache_key }}'"
+
+      # ---------------------------
+      # 3. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
+      #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
+      #   - If not found → try restore-keys prefix for partial match
+      #   - If still not found → Gradle downloads fresh, saved under key after job
+      # ---------------------------
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ inputs.gradle_cache_key }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # ---------------------------
+      # 4. Runs Spotless & Checkstyle(verify formatting + code style)
+      # ---------------------------
+      - name: Run Code Quality Checks
+        run: ./gradlew check --no-daemon

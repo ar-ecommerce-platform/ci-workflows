@@ -1,0 +1,171 @@
+# ------------------------------------------------------------------------------
+# Workflow: Notify Slack
+# Purpose:
+#   Sends a summary of job statuses to a Slack channel at the end of a CI run.
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - Dynamically builds the Slack payload using Node.js
+#   - Adds ✅, ⏭, ❌ based on each job's result
+#   - Color:
+#       - Green ✅ all jobs passed or skipped
+#       - Red ❌ any job failed
+# ------------------------------------------------------------------------------
+name: Notify Slack
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      image_sha:
+        required: true
+        type: string
+      setup_status:
+        required: true
+        type: string
+      code_quality_status:
+        required: true
+        type: string
+      security_scan_status:
+        required: true
+        type: string
+      unit_tests_status:
+        required: true
+        type: string
+      integration_tests_status:
+        required: true
+        type: string
+      quality_scan_status:
+        required: true
+        type: string
+      docker_release_status:
+        required: true
+        type: string
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---------------------------
+      # 1. Calculate duration
+      # ---------------------------
+      - name: Calculate accurate duration via GitHub API
+        id: calc-duration
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          response=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/${{ github.repository }}/actions/runs/$RUN_ID")
+
+          start=$(echo "$response" | jq -r '.run_started_at')
+          end=$(echo "$response" | jq -r '.updated_at')
+
+          start_epoch=$(date -d "$start" +%s)
+          end_epoch=$(date -d "$end" +%s)
+          total=$((end_epoch - start_epoch))
+
+          minutes=$((total / 60))
+          seconds=$((total % 60))
+
+          if [ $minutes -gt 0 ]; then
+            duration="${minutes}m ${seconds}s"
+          else
+            duration="${seconds}s"
+          fi
+
+          echo "duration=$duration" >> "$GITHUB_OUTPUT"
+          
+      # ---------------------------
+      # 2. Build Slack payload
+      # ---------------------------
+      - name: Build Slack Payload
+        id: build-payload
+        run: |
+          node <<'EOF'
+          const fs = require("fs");
+
+          // Map job status to emoji
+          const statusEmoji = (status) =>
+            status === "success" ? "✅" :
+            status === "skipped" ? "⏭" :
+            "❌";
+
+          // List of all jobs
+          const allJobs = ["SETUP","CODE_QUALITY","SECURITY_SCAN","UNIT_TESTS","INTEGRATION_TESTS","QUALITY_SCAN","DOCKER_RELEASE"];
+
+          // Determine if any job failed
+          const anyFailed = allJobs.some(k => process.env[k] === "failure");
+
+          // Overall CI/CD run status
+          const runStatus = anyFailed ? "❌ CI/CD Run Failed" : "✅ CI/CD Run Passed";
+
+          // Build Slack message blocks
+          const blocks = [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*${runStatus}* - *${process.env.SERVICE}* (${process.env.BRANCH}) - *Duration:* ${process.env.DURATION}\n*Commit:* ${process.env.COMMIT_MSG} *by* ${process.env.AUTHOR}`
+              }
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Build:* Setup ${statusEmoji(process.env.SETUP)} | Code Quality ${statusEmoji(process.env.CODE_QUALITY)}\n` +
+                      `*Test:* Security Scan ${statusEmoji(process.env.SECURITY_SCAN)} | Unit Tests ${statusEmoji(process.env.UNIT_TESTS)} | Integration Tests ${statusEmoji(process.env.INTEGRATION_TESTS)} | Quality Scan ${statusEmoji(process.env.QUALITY_SCAN)}\n` +
+                      `*Deploy:* Docker Release ${statusEmoji(process.env.DOCKER_RELEASE)}`
+              }
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*Workflow Details:* <${process.env.WORKFLOW_URL}|Open in GitHub Actions>\n` +
+                      `*Docker Image:* ${process.env.IMAGE}`
+              }
+            }
+          ];
+
+          // Slack attachment color: red if any failed, green if all passed
+          const color = anyFailed ? "#ff0000" : "#36a64f";
+          const payload = { blocks, attachments: [{ color }] };
+
+          // Output payload for next step
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `payload=${JSON.stringify(payload)}\n`);
+          EOF
+        env:
+          SERVICE: ${{ inputs.service_name }}
+          IMAGE: ${{ inputs.image_sha }}
+          AUTHOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          BRANCH: ${{ github.ref_name }}
+          DURATION: ${{ steps.calc-duration.outputs.duration }}
+          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SETUP: ${{ inputs.setup_status }}
+          CODE_QUALITY: ${{ inputs.code_quality_status }}
+          SECURITY_SCAN: ${{ inputs.security_scan_status }}
+          UNIT_TESTS: ${{ inputs.unit_tests_status }}
+          INTEGRATION_TESTS: ${{ inputs.integration_tests_status }}
+          QUALITY_SCAN: ${{ inputs.quality_scan_status }}
+          DOCKER_RELEASE: ${{ inputs.docker_release_status }}
+
+      # ---------------------------
+      # 3. Send Slack notification
+      # ---------------------------
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          payload: ${{ steps.build-payload.outputs.payload }}
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook

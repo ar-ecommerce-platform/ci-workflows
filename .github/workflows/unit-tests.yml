@@ -1,0 +1,94 @@
+# ------------------------------------------------------------------------------
+# Workflow: Unit Tests
+# Purpose:
+#   Runs Unit Tests
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - Unit testing: Verifies that each component or function works correctly on its own
+# ------------------------------------------------------------------------------
+name: Unit Tests
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      gradle_cache_key:
+        required: false
+        type: string
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # ---------------------------
+      # 1. Check out repository
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # ---------------------------
+      # 2. Set up Java 21
+      # ---------------------------
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      # ---------------------------
+      # 3. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
+      #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
+      #   - If not found → try restore-keys prefix for partial match
+      #   - If still not found → Gradle downloads fresh, saved under key after job
+      # ---------------------------
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ inputs.gradle_cache_key }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # ---------------------------
+      # 4. Run Unit Tests
+      # ---------------------------
+      - name: Run Unit Tests
+        run: ./gradlew test --no-daemon
+
+      # ---------------------------
+      # 5. Upload report for feedback
+      # ---------------------------
+      - name: Upload Unit Tests Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-${{ inputs.service_name }}
+          path: build/reports/tests/unit/${{ inputs.service_name }}
+
+      # ---------------------------
+      # 6. Upload Coverage Artifacts(Used for coverage badge)
+      # ---------------------------
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-exec-${{ inputs.service_name }}
+          path: build/jacoco/${{ inputs.service_name }}/test.exec
+
+      # ---------------------------
+      # 7. Upload Coverage Artifacts(Used in quality-scan.yml for SonarCloud Analysis)
+      # ---------------------------
+      - name: Upload Coverage XML Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml-${{ inputs.service_name }}
+          path: build/reports/jacoco/${{ inputs.service_name }}/coverage.xml

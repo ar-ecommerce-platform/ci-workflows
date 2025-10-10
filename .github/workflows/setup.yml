@@ -1,0 +1,144 @@
+# ------------------------------------------------------------------------------
+# Workflow: Setup
+# Purpose:
+#   Sets up Gradle, builds the service artifact, and pushes a test Docker image.
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - Docker image is tagged `:ci` and intended only for integration testing.
+#   - Skips running unit tests (`-x test`) since tests run in other workflows.
+# ------------------------------------------------------------------------------
+name: Setup
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+    outputs:
+      gradle_cache_key:
+        description: "Gradle cache key for downstream jobs"
+        value: ${{ jobs.setup.outputs.gradle_cache_key }}
+      image_sha:
+        description: "Test image tagged with SHA"
+        value: ${{ jobs.setup.outputs.image_sha }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      gradle_cache_key: ${{ steps.set-key.outputs.key }}
+      image_sha: ${{ steps.image.outputs.image_sha }}
+
+    steps:
+      # ---------------------------
+      # 1. Check out repository
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # ---------------------------
+      # 2. Set up Java 21
+      # ---------------------------
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      # ---------------------------
+      # 3. Generate cache key by hashing Gradle config files into a string of form:
+      #    "gradle" + OS + hashed string (e.g., gradle-linux-abc123)
+      # ---------------------------
+      - name: Compute Gradle Cache Key
+        id: set-key
+        run: |
+          echo "key=gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}" >> "$GITHUB_OUTPUT"
+
+      # ---------------------------
+      # 4. Searches GitHub Actions cache storage for an entry matching the key
+      #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
+      #   - If not found → try restore-keys prefix for partial match
+      #   - If still not found → Gradle downloads fresh, saved under key after job
+      # ---------------------------
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ steps.set-key.outputs.key }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # ---------------------------
+      # 5. Builds app
+      #   - Skips tests since they have their own workflow
+      # ---------------------------
+      - name: Build (no test)
+        run: ./gradlew build -x test --no-daemon
+
+      # ---------------------------
+      # 6. Logs in to GitHub Container registry
+      # ---------------------------
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------
+      # 7. Set Docker Image Name
+      # ---------------------------
+      - name: Set Docker Image Name
+        id: image
+        run: |
+          IMAGE_NAME=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}
+          echo "image_sha=${IMAGE_NAME}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image_ci=${IMAGE_NAME}:ci" >> "$GITHUB_OUTPUT"
+
+      # ---------------------------
+      # 8. Build test image
+      # ---------------------------
+      - name: Build Image
+        run: docker build -t ${{ steps.image.outputs.image_sha }} .
+
+      # ---------------------------
+      # 9. Tag Image as :ci
+      # ---------------------------
+      - name: Tag Image as :ci
+        run: docker tag ${{ steps.image.outputs.image_sha }} ${{ steps.image.outputs.image_ci }}
+
+      # ---------------------------
+      # 9. Start the service
+      # ---------------------------
+      - name: Start the service
+        run: |
+          docker run -d \
+          --name ${{ inputs.service_name }} \
+          -p 8888:8888 \
+          --health-cmd="curl -f http://localhost:8888/actuator/health || exit 1" \
+          --health-interval=10s \
+          --health-timeout=10s \
+          --health-retries=15 \
+          ${{ steps.image.outputs.image_sha }}
+
+      # ---------------------------
+      # 10. Wait for service to be healthy
+      # ---------------------------
+      - name: Wait for service to be healthy
+        uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@dev
+        with:
+          container_name: ${{ inputs.service_name }}
+
+      # ---------------------------
+      # 11. Push test image
+      # ---------------------------
+      - name: Push Test Image
+        run: |
+          docker push ${{ steps.image.outputs.image_sha }}
+          docker push ${{ steps.image.outputs.image_ci }}

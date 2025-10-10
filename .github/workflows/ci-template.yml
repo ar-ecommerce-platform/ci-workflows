@@ -1,0 +1,193 @@
+# ------------------------------------------------------------------------------
+# Workflow: Reusable CI Workflow
+# Purpose:
+#   Runs the full CI pipeline (build, test, scan, publish) for all services using one shared workflow.
+#
+# Trigger:
+#   Invoked by services via "workflow_call".
+#
+# Notes:
+#   - "docker-release" job only runs for commits/merges on main to prevent accidental releases.
+#   - Jobs (code quality, security scan, tests) can be toggled via workflow inputs
+#   - Jobs are dependency-aware and stop running later jobs if earlier ones fail (fail fast).
+# ------------------------------------------------------------------------------
+name: Reusable CI Workflow
+
+on:
+  workflow_call:
+    inputs:
+      enable_database:
+        type: boolean
+        default: true
+      run_code_quality:
+        type: boolean
+        default: true
+      run_unit_tests:
+        type: boolean
+        default: true
+      run_integration_tests:
+        type: boolean
+        default: true
+      run_quality_scan:
+        type: boolean
+        default: true
+      run_security_scan:
+        type: boolean
+        default: true
+    secrets:
+      PAT_REPORTS_TOKEN:
+        required: true
+      OWASP_API_KEY:
+        required: true
+      SONAR_TOKEN:
+        required: false
+      SNYK_TOKEN:
+        required: false
+      SLACK_WEBHOOK_URL:
+        required: true
+      OSSINDEX_USERNAME:
+        required: true
+      OSSINDEX_TOKEN:
+        required: true
+
+jobs:
+  # ---------------------------
+  # 1. Sets up Gradle, builds the service artifact, and pushes a test Docker image.
+  # ---------------------------
+  setup:
+    uses: ./.github/workflows/setup.yml
+    with:
+      service_name: ${{ github.event.repository.name }}
+    permissions:
+      contents: read
+      packages: write
+
+  # ---------------------------
+  # 2. Runs Spotless Check and Checkstyle
+  # ---------------------------
+  code-quality:
+    if: ${{ inputs.run_code_quality }}
+    uses: ./.github/workflows/code-quality.yml
+    needs: setup
+    with:
+      service_name: ${{ github.event.repository.name }}
+      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+
+  # ---------------------------
+  # 3. Runs OWASP Dependency Check and Snyk Container Scan
+  # ---------------------------
+  security-scan:
+    if: ${{ inputs.run_security_scan }}
+    uses: ./.github/workflows/security-scan.yml
+    needs: setup
+    with:
+      service_name: ${{ github.event.repository.name }}
+      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+      image_sha: ${{ needs.setup.outputs.image_sha }}
+    secrets:
+      OWASP_API_KEY: ${{ secrets.OWASP_API_KEY }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
+      OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
+
+  # ---------------------------
+  # 4. Runs Unit Tests
+  # ---------------------------
+  unit-tests:
+    if: ${{ inputs.run_unit_tests }}
+    uses: ./.github/workflows/unit-tests.yml
+    needs: setup
+    with:
+      service_name: ${{ github.event.repository.name }}
+      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+
+  # ---------------------------
+  # 5. Runs Integration Tests
+  # ---------------------------
+  integration-tests:
+    if: ${{ inputs.run_integration_tests }}
+    uses: ./.github/workflows/integration-tests.yml
+    needs: setup
+    with:
+      service_name: ${{ github.event.repository.name }}
+      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+      enable_database: ${{ inputs.enable_database }}
+
+  # ---------------------------
+  # 6. Runs SonarCloud analysis
+  # ---------------------------
+  quality-scan:
+    if: ${{ inputs.run_quality_scan && inputs.run_unit_tests }}
+    uses: ./.github/workflows/quality-scan.yml
+    needs: [setup, unit-tests]
+    with:
+      service_name: ${{ github.event.repository.name }}
+      gradle_cache_key: ${{ needs.setup.outputs.gradle_cache_key }}
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ---------------------------
+  # Gate Job to wait for all preceding optional jobs
+  # ---------------------------
+  check-dependencies:
+    needs:
+      [code-quality, quality-scan, security-scan, unit-tests, integration-tests]
+    if: always()
+    uses: ./.github/workflows/check-dependencies.yml
+    with:
+      code_quality_status: ${{ needs.code-quality.result }}
+      quality_scan_status: ${{ needs.quality-scan.result }}
+      security_scan_status: ${{ needs.security-scan.result }}
+      unit_tests_status: ${{ needs.unit-tests.result }}
+      integration_tests_status: ${{ needs.integration-tests.result }}
+
+  # ---------------------------
+  # 7. Auto-bumps version, tags commit, retags image for release.
+  # ---------------------------
+  docker-release:
+    if: github.ref == 'refs/heads/main' && always() && needs.check-dependencies.result == 'success'
+    uses: ./.github/workflows/docker-release.yml
+    needs: [check-dependencies]
+    with:
+      service_name: ${{ github.event.repository.name }}
+
+  # ---------------------------
+  # 8. Uploads all CI reports (unit tests, integration tests, security scans, coverage) to test report repo.
+  # ---------------------------
+  test-reports:
+    if: github.ref == 'refs/heads/main' && always() && needs.check-dependencies.result == 'success'
+    needs: [check-dependencies]
+    uses: ./.github/workflows/test-reports.yml
+    with:
+      service_name: ${{ github.event.repository.name }}
+    secrets:
+      PAT_REPORTS_TOKEN: ${{ secrets.PAT_REPORTS_TOKEN }}
+
+  # ---------------------------
+  # 9. Sends a summary of job statuses to a Slack channel at the end of a CI run.
+  # ---------------------------
+  notify-slack:
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    needs:
+      [
+        setup,
+        code-quality,
+        security-scan,
+        unit-tests,
+        integration-tests,
+        quality-scan,
+        docker-release,
+      ]
+    with:
+      service_name: ${{ github.event.repository.name }}
+      image_sha: ${{ needs.setup.outputs.image_sha }}
+      setup_status: ${{ needs.setup.result }}
+      code_quality_status: ${{ needs.code-quality.result }}
+      security_scan_status: ${{ needs.security-scan.result }}
+      unit_tests_status: ${{ needs.unit-tests.result }}
+      integration_tests_status: ${{ needs.integration-tests.result }}
+      quality_scan_status: ${{ needs.quality-scan.result }}
+      docker_release_status: ${{ needs.docker-release.result }}
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,0 +1,193 @@
+# ------------------------------------------------------------------------------
+# Workflow: Docker Release
+# Purpose:
+#   Retags a tested Docker image and version control.
+#   Uses commit history + Conventional Commits to auto-bump versions (major/minor/patch).
+#
+# Trigger:
+#         Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   If never tagged before then it auto sets at 0.1.0, elses
+#   - Version bump follows Conventional Commits:
+#       feat:            → minor
+#       fix:             → patch
+#       BREAKING CHANGE: → major
+#   - Images are tagged with both `latest` and as the specific version (e.g., v1.2.3).
+#   - Pushes a Git tag for the version so future bumps are based on commit history.
+#   - Tags the Git commit to match the released Docker image version
+# ------------------------------------------------------------------------------
+name: Docker Release
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+
+jobs:
+  docker-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      # ---------------------------
+      # 1. Check out repo so we can read tags and commits
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # ---------------------------
+      # 2. Get last Git tag (or start from v0.0.0 if none exist yet)
+      # ---------------------------
+      - name: Get last Git tag
+        id: last_tag
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "LAST_TAG=$LAST_TAG" >> $GITHUB_ENV
+
+      # ---------------------------
+      # 3. Get commits since last tag
+      # ---------------------------
+      - name: Get commits since last tag (only if not first release)
+        if: env.LAST_TAG != 'v0.0.0'
+        run: |
+          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+          {
+            echo 'COMMITS<<EOF'
+            echo "$COMMITS"
+            echo 'EOF'
+          } >> $GITHUB_ENV
+
+      # ---------------------------
+      # 4. Determine version bump
+      # - "BREAKING CHANGE" → major
+      # - "feat:" → minor
+      # - "fix:" → patch
+      # ---------------------------
+      - name: Determine version bump
+        run: |
+          if [ -z "$LAST_TAG" ]; then
+            # First release → v0.1.0
+            echo "NEXT_VERSION=v0.1.0" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          BUMP="none"
+          if [[ -n "$COMMITS" ]]; then
+            if echo "$COMMITS" | grep -q "BREAKING CHANGE"; then
+              BUMP="major"
+            elif echo "$COMMITS" | grep -q "^feat:"; then
+              BUMP="minor"
+            elif echo "$COMMITS" | grep -q "^fix:"; then
+              BUMP="patch"
+            fi
+          fi
+          echo "BUMP=$BUMP" >> $GITHUB_ENV
+
+      # ---------------------------
+      # 5. Increment version based on bump type and last tag
+      # ---------------------------
+      - name: Compute next version
+        run: |
+          if [ "$BUMP" == "none" ]; then
+            echo "No commits found to trigger a new version. Exiting gracefully."
+            exit 0
+          fi
+
+          if [ "$LAST_TAG" == "v0.0.0" ]; then
+            case $BUMP in
+              major) NEXT_VERSION="v1.0.0" ;;
+              minor) NEXT_VERSION="v0.1.0" ;;
+              patch) NEXT_VERSION="v0.0.1" ;;
+            esac
+          else
+            # Strip 'v' from the tag
+            VERSION_NO_V="${LAST_TAG#v}"
+
+            # Split the version string into an array
+            IFS='.' read -r -a version_parts <<< "$VERSION_NO_V"
+
+            # Assign parts to individual variables, with a default of 0
+            MAJOR=${version_parts[0]:-0}
+            MINOR=${version_parts[1]:-0}
+            PATCH=${version_parts[2]:-0}
+            
+            # Increment the version based on the bump type
+            case $BUMP in
+              major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+              patch) PATCH=$((PATCH + 1)) ;;
+            esac
+
+            NEXT_VERSION="v$MAJOR.$MINOR.$PATCH"
+          fi
+
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
+
+      # ---------------------------
+      # 6. Update version.txt
+      # ---------------------------
+      - name: Update version file
+        if: success() && env.NEXT_VERSION
+        run: |
+          echo "${NEXT_VERSION#v}" > version.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.txt
+
+          if git diff --cached --quiet --exit-code; then
+            echo "No changes to commit. Skipping."
+          else
+            git commit -m "chore(release): $NEXT_VERSION [skip ci]"
+          fi
+
+      # ---------------------------
+      # 7. Tag and Push commit
+      # ---------------------------
+      - name: Tag commit
+        run: |
+          git tag -a "$NEXT_VERSION" -m "Release $NEXT_VERSION"
+          git push origin HEAD
+          git push origin "$NEXT_VERSION"
+
+      # ---------------------------
+      # 8. Log into GHCR
+      # ---------------------------
+      - name: Log into GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------
+      # 9. Pull CI Image
+      # ---------------------------
+      - name: Pull CI image
+        run: |
+          docker pull ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:${GITHUB_SHA}
+
+      # ---------------------------
+      # 10. Retag image for release
+      # ---------------------------
+      - name: Retag image for release
+        run: |
+          LATEST_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
+          VERSION_TAG=ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:$NEXT_VERSION
+
+          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:${GITHUB_SHA} $LATEST_TAG
+          docker tag ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:${GITHUB_SHA} $VERSION_TAG
+
+      # ---------------------------
+      # 11. Push release image
+      # ---------------------------
+      - name: Push release image
+        run: |
+          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:latest
+          docker push ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:$NEXT_VERSION

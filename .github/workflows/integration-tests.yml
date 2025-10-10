@@ -1,0 +1,132 @@
+# ------------------------------------------------------------------------------
+# Workflow: Integration Tests
+# Purpose:
+#   Runs Integration Tests
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - Integration testing: Verifies that the different parts (e.g., database, config server, and application code)
+#     of a service work correctly together as a whole
+# ------------------------------------------------------------------------------
+name: Integration Tests
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      gradle_cache_key:
+        required: true
+        type: string
+      enable_database:
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # ---------------------------
+      # 1. Start Config Server to get configuration files for service
+      # ---------------------------
+      - name: Start Config Server
+        run: |
+          docker run --rm -d \
+          --name config-server \
+          -p 8888:8888 \
+          --health-cmd="curl -f http://localhost:8888/actuator/health || exit 1" \
+          --health-interval=5s \
+          --health-timeout=3s \
+          --health-retries=5 \
+          ghcr.io/ar-ecommerce-platform/config-server:latest
+
+      # ---------------------------
+      # 2. Waits for config server to be healthy
+      # ---------------------------
+      - name: Wait for config-server to be healthy
+        uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@dev
+        with:
+          container_name: config-server
+
+      # ---------------------------
+      # 3. Start Test Database
+      # ---------------------------
+      - name: Start Test Database
+        if: ${{ inputs.enable_database }}
+        run: |
+          docker run --rm -d \
+          --name test-db \
+          -p 5432:5432 \
+          -e POSTGRES_USER=test \
+          -e POSTGRES_PASSWORD=test \
+          -e POSTGRES_DB=testdb \
+          --health-cmd="pg_isready -U test" \
+          --health-interval=10s \
+          --health-timeout=5s \
+          --health-retries=5 \
+          postgres:17.5
+
+      # ---------------------------
+      # 4. Waits for test database to be healthy
+      # ---------------------------
+      - name: Wait for test-db to be healthy
+        if: ${{ inputs.enable_database }}
+        uses: ar-ecommerce-platform/ci-workflows/.github/actions/wait-for-health@dev
+        with:
+          container_name: test-db
+
+      # ---------------------------
+      # 5. Check out repository
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # ---------------------------
+      # 6. Set up Java 21
+      # ---------------------------
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      # ---------------------------
+      # 7. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
+      #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
+      #   - If not found → try restore-keys prefix for partial match
+      #   - If still not found → Gradle downloads fresh, saved under key after job
+      # ---------------------------
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ inputs.gradle_cache_key }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # ---------------------------
+      # 8. Run Integration Tests
+      # ---------------------------
+      - name: Run Integration Tests
+        run: ./gradlew integrationTest --no-daemon
+        env:
+          SERVICE_IMAGE: ghcr.io/ar-ecommerce-platform/${{ inputs.service_name }}:${GITHUB_SHA}
+
+      # ---------------------------
+      # 9. Upload report for feedback
+      # ---------------------------
+      - name: Upload Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-${{ inputs.service_name }}
+          path: build/reports/tests/integration/${{ inputs.service_name }}

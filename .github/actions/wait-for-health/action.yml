@@ -1,0 +1,72 @@
+# ------------------------------------------------------------------------------
+# Action: Wait for Container to be Healthy
+# Purpose:
+#   Waits for a Docker container to report "healthy" status before continuing.
+#   Useful for databases, config servers, or any service that must be ready first.
+#
+# How it works:
+#   - First waits for the container to exist.
+#   - Then loops, checking container health with `docker inspect`.
+#   - If healthy → exits successfully.
+#   - If not healthy after retries → fails the workflow.
+# ------------------------------------------------------------------------------
+name: 'Wait for container to be healthy'
+description: 'Waits for a Docker container to report healthy status'
+inputs:
+  container_name:
+    description: 'Name of the Docker container'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    # ---------------------------
+    # 1. Wait for container to exist
+    # ---------------------------
+    - name: Wait for container ${{ inputs.container_name }} to exist
+      shell: bash
+      run: |
+        MAX_ATTEMPTS=10
+        SLEEP_INTERVAL=5
+        EXISTED=
+
+        for i in $(seq 1 $MAX_ATTEMPTS); do
+          if docker ps --format '{{.Names}}' | grep -q "^${{ inputs.container_name }}$"; then
+            echo "✅ Container ${{ inputs.container_name }} exists!"
+            EXISTED=1
+            break
+          fi
+          echo "⏳ Waiting for container ${{ inputs.container_name }} to appear... ($i/$MAX_ATTEMPTS)"
+          sleep $SLEEP_INTERVAL
+        done
+
+        if [ -z "$EXISTED" ]; then
+          echo "❌ Container ${{ inputs.container_name }} did not appear after $MAX_ATTEMPTS attempts"
+          exit 1
+        fi
+
+    # ---------------------------
+    # 2. Poll container health
+    # ---------------------------
+    - name: Wait for container ${{ inputs.container_name }} to be healthy
+      shell: bash
+      run: |
+        MAX_ATTEMPTS=30
+        SLEEP_INTERVAL=5
+        SUCCESS=
+
+        for i in $(seq 1 $MAX_ATTEMPTS); do
+          STATUS=$(docker inspect --format='{{.State.Health.Status}}' "${{ inputs.container_name }}" 2>/dev/null || echo "")
+          if [ "$STATUS" == "healthy" ]; then
+            echo "✅ Container ${{ inputs.container_name }} is healthy!"
+            SUCCESS=1
+            break
+          fi
+          echo "⏳ Waiting for ${{ inputs.container_name }} to become healthy... ($i/$MAX_ATTEMPTS)"
+          sleep $SLEEP_INTERVAL
+        done
+
+        if [ -z "$SUCCESS" ]; then
+          echo "❌ Container ${{ inputs.container_name }} did not become healthy after $MAX_ATTEMPTS attempts"
+          exit 1
+        fi

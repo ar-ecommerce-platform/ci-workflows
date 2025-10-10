@@ -1,0 +1,140 @@
+# Workflow: Security Scan
+# Purpose:
+#   Runs OWASP Dependency Check and Snyk Container Scan on test image
+#
+# Trigger:
+#   Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#   - OWASP Dependency Check: Scans project dependencies for known vulnerabilities
+#   - Snyk Container Scan: Scans Docker images for known vulnerabilities
+# ------------------------------------------------------------------------------
+name: Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      gradle_cache_key:
+        required: true
+        type: string
+      image_sha:
+        required: true
+        type: string
+    secrets:
+      OWASP_API_KEY:
+        required: true
+      SNYK_TOKEN:
+        required: true
+      OSSINDEX_USERNAME:
+        required: true
+      OSSINDEX_TOKEN:
+        required: true
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      # ---------------------------
+      # 1. Check out repository
+      # ---------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # ---------------------------
+      # 2. Set up Java 21
+      # ---------------------------
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      # ---------------------------
+      # 3. Searches GitHub Actions cache storage for an entry matching gradle_cache_key
+      #   - If found → restore into ~/.gradle/caches and ~/.gradle/wrapper
+      #   - If not found → try restore-keys prefix for partial match
+      #   - If still not found → Gradle downloads fresh, saved under key after job
+      # ---------------------------
+      - name: Restore Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ inputs.gradle_cache_key }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      # ---------------------------
+      # 4. Searches GitHub Actions cache storage for an entry matching dependency-check-data
+      # ---------------------------
+      - name: Cache Dependency-Check Data
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/dependency-check-data
+          key: dependency-check-data-${{ hashFiles('**/*.gradle*') }}
+
+      # ---------------------------
+      # 5. Scans project dependencies for known vulnerabilities.
+      #    Fails the build if High/Critical issues are found (default threshold CVSS ≥ 7.0).
+      # ---------------------------
+      - name: Run OWASP Dependency Check
+        run: ./gradlew dependencyCheckAnalyze
+        env:
+          NVD_API_KEY: ${{ secrets.OWASP_API_KEY }}
+          OSSINDEX_USERNAME: ${{ secrets.OSSINDEX_USERNAME }}
+          OSSINDEX_TOKEN: ${{ secrets.OSSINDEX_TOKEN }}
+
+      # ---------------------------
+      # 6. If build fails, upload report as feedback to find out why it failed (which dependency, severity, etc.).
+      # ---------------------------
+      - name: Upload OWASP Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-${{ inputs.service_name }}
+          path: build/reports/owasp/${{ inputs.service_name }}
+
+      # ---------------------------
+      # 7. Log in to GitHub Container registry
+      # ---------------------------
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---------------------------
+      # 8. Pull test image
+      # ---------------------------
+      - name: Pull test image
+        run: docker pull ${{ inputs.image_sha }}
+
+      # ---------------------------
+      # 9. Run Snyk Container Scan on test image
+      # ---------------------------
+      - name: Run Snyk Docker Action to test image
+        uses: snyk/actions/docker@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: ${{ inputs.image_sha }}
+          sarif: true
+          args: --file=Dockerfile --severity-threshold=high --sarif-file-output=snyk.sarif
+
+      # ---------------------------
+      # 10. Upload Snyk Container Scan report
+      # ---------------------------
+      - name: Upload Snyk Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-${{ inputs.service_name }}
+          path: snyk.sarif

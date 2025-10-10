@@ -1,0 +1,116 @@
+# ------------------------------------------------------------------------------
+# Workflow: Test Reports
+# Purpose:
+#   Collects CI artifacts (unit tests, integration tests, OWASP, Snyk)
+#   from the service repo and commits them to the central test-reports repo.
+#
+# Trigger:
+#         Invoked by other workflows via "workflow_call".
+#
+# Notes:
+#     - Skips missing artifacts without failing.
+#     - Only runs on main (to track reports for released code)
+# ------------------------------------------------------------------------------
+name: Test Reports
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+    secrets:
+      PAT_REPORTS_TOKEN:
+        required: true
+
+jobs:
+  test-reports:
+    runs-on: ubuntu-latest
+    steps:
+      # ---------------------------
+      # 1. Checkout repo
+      # ---------------------------
+      - name: Checkout service repository
+        uses: actions/checkout@v4
+
+      # ---------------------------
+      # 2. Download Unit Test Report
+      # ---------------------------
+      - name: Download Unit Test Report
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-${{ inputs.service_name }}
+          path: ci-artifacts/unit
+        continue-on-error: true
+
+      # ---------------------------
+      # 3. Download Coverage Report
+      # ---------------------------
+      - name: Download Coverage Report
+        uses: actions/download-artifact@v4
+        with:
+          name: test-exec-${{ inputs.service_name }}
+          path: ci-artifacts/jacoco
+        continue-on-error: true
+
+      # ---------------------------
+      # 5. Download OWASP Security Report
+      # ---------------------------
+      - name: Download OWASP Security Report
+        uses: actions/download-artifact@v4
+        with:
+          name: owasp-${{ inputs.service_name }}
+          path: ci-artifacts/owasp
+        continue-on-error: true
+
+      # ---------------------------
+      # 6. Download Snyk Report
+      # ---------------------------
+      - name: Download Snyk Report
+        uses: actions/download-artifact@v4
+        with:
+          name: snyk-${{ inputs.service_name }}
+          path: ci-artifacts/snyk
+        continue-on-error: true
+
+      # ---------------------------
+      # 7. Checkout test-reports repo
+      # ---------------------------
+      - name: Checkout Test Reports Repo
+        uses: actions/checkout@v5
+        with:
+          repository: ar-ecommerce-platform/test-reports
+          token: ${{ secrets.PAT_REPORTS_TOKEN }}
+          path: test-reports
+
+      # ---------------------------
+      # 8. Copy artifacts into the repo under service-specific folder
+      # ---------------------------
+      - name: Copy Artifacts to test-reports
+        run: |
+          mkdir -p test-reports/${{ inputs.service_name }}/unit
+          mkdir -p test-reports/${{ inputs.service_name }}/jacoco
+          mkdir -p test-reports/${{ inputs.service_name }}/owasp
+          mkdir -p test-reports/${{ inputs.service_name }}/snyk
+
+          cp -r ci-artifacts/unit/* test-reports/${{ inputs.service_name }}/unit/
+          cp -r ci-artifacts/jacoco/* test-reports/${{ inputs.service_name }}/jacoco/
+          cp -r ci-artifacts/owasp/* test-reports/${{ inputs.service_name }}/owasp/
+          cp -r ci-artifacts/snyk/* test-reports/${{ inputs.service_name }}/snyk/
+
+      # ---------------------------
+      # 9. Commit and push changes
+      # ---------------------------
+      - name: Commit & Push Test Reports
+        run: |
+          cd test-reports
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          if git diff --cached --quiet --exit-code; then
+            echo "No new reports to commit."
+          else
+            git commit -m "chore: update test reports for ${{ inputs.service_name }}"
+            git push origin main
+          fi
