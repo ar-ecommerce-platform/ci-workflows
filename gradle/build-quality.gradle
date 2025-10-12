@@ -27,6 +27,13 @@ tasks.named('check').configure {
     dependsOn 'spotlessCheck', 'checkstyleMain', 'checkstyleTest'
 }
 
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        html.required = true    // Local devs get a nice HTML report
+        xml.required = false
+    }
+}
+
 // ---------------------------
 // OWASP Dependency Check
 // ---------------------------

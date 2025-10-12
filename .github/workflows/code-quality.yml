@@ -67,4 +67,14 @@ jobs:
       # 4. Runs Spotless & Checkstyle(verify formatting + code style)
       # ---------------------------
       - name: Run Code Quality Checks
-        run: ./gradlew check --no-daemon
+        run: ./gradlew spotlessCheck checkstyleMain checkstyleTest --console=plain --info --no-daemon
+
+      # ---------------------------
+      # 5. Upload HTML checkstyle report
+      # ---------------------------
+      - name: Upload Checkstyle Reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-reports-${{ inputs.service_name }}
+          path: build/reports/checkstyle/
