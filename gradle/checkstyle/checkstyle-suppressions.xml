@@ -4,14 +4,13 @@
         "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 
 <suppressions>
-    <!-- Suppress Javadoc rules for test/config classes -->
-    <suppress checks="Javadoc.*" files=".*(Test|Tests|Config)\.java"/>
+    <!-- Suppress generated classes -->
+    <suppress files=".*[\\/]generated[\\/].*" checks=".*"/>
 
-    <!-- Suppress visibility checks on Spring or DI annotations -->
-    <suppress checks="VisibilityModifier" files=".*" lines=".*@Autowired.*"/>
-    <suppress checks="VisibilityModifier" files=".*" lines=".*@Value.*"/>
-    <suppress checks="VisibilityModifier" files=".*" lines=".*@Inject.*"/>
+    <!-- Suppress tests for Javadoc / MagicNumber -->
+    <suppress files=".*[\\/]src[\\/]test[\\/].*" checks="Javadoc.*"/>
+    <suppress files=".*[\\/]src[\\/]test[\\/].*" checks="MagicNumber"/>
 
-    <!-- Optionally ignore generated code or Lombok-annotated files -->
-    <suppress files=".*(Generated|Lombok).*\.java" checks=".*"/>
+    <!-- Suppress main application entry point -->
+    <suppress files=".*Application\.java" checks="HideUtilityClassConstructor"/>
 </suppressions>

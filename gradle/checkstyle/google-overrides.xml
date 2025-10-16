@@ -5,16 +5,15 @@
 
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
-    <!-- Include the base Google config -->
-    <module name="ImportControl">
-        <property name="file" value="https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml"/>
+
+    <!-- === Import the base Google config (local file) === -->
+    <module name="ConfigurationLoader">
+        <property name="file" value="gradle/checkstyle/google_checks.xml"/>
     </module>
 
-    <!-- ==== Global Overrides ==== -->
-    <!-- ==== TreeWalker rules ==== -->
+    <!-- Base Google style -->
     <module name="TreeWalker">
-
-        <!-- Allow Spring DI visibility patterns -->
+        <!-- Relax field visibility rules for Spring beans -->
         <module name="VisibilityModifier">
             <property name="scope" value="protected"/>
             <property name="allowPublicFinalFields" value="true"/>
@@ -23,29 +22,15 @@
             <property name="ignoreFieldNames" value="serialVersionUID,logger,LOGGER"/>
         </module>
 
-        <!-- Disable noisy checks that are redundant or problematic in Spring apps -->
+        <!-- Ignore magic numbers for -1, 0, 1 -->
         <module name="MagicNumber">
             <property name="ignoreNumbers" value="-1,0,1"/>
             <property name="ignoreHashCodeMethod" value="true"/>
         </module>
-
-        <!-- Optional: keep NeedBraces for consistency -->
-        <module name="NeedBraces"/>
-
-        <!-- Optional: ensure empty lines between methods/classes -->
-        <module name="EmptyLineSeparator"/>
-
-        <!-- Optional: good brace style consistency -->
-        <module name="LeftCurly">
-            <property name="option" value="eol"/>
-        </module>
-        <module name="RightCurly">
-            <property name="option" value="alone"/>
-        </module>
     </module>
 
-    <!-- Load suppressions file for test and Javadoc exemptions -->
+    <!-- Suppressions file -->
     <module name="SuppressionFilter">
-        <property name="file" value="https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/main/gradle/checkstyle/checkstyle-suppressions.xml"/>
+        <property name="file" value="checkstyle-suppressions.xml"/>
     </module>
 </module>
