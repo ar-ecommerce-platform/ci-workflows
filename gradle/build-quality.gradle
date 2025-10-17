@@ -14,11 +14,11 @@ spotless {
 // ---------------------------
 // Checkstyle
 // ---------------------------
-def checkstyleConfigUrl = "file://${project.rootDir}/gradle/checkstyle/google-overrides.xml"
+//def checkstyleConfigUrl = "file://${project.rootDir}/gradle/checkstyle/google-overrides.xml"
 
 checkstyle {
     toolVersion = "11.0.1"
-    config = resources.text.fromUri(checkstyleConfigUrl)
+    config = file("gradle/checkstyle/google-overrides.xml")
     ignoreFailures = false
 }
 
