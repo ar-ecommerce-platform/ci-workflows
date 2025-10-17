@@ -40,8 +40,8 @@
         </module>
     </module>
 
-    <!-- Global suppressions (tests, Lombok, generated code) -->
+    <!-- Global suppressions -->
     <module name="SuppressionFilter">
-        <property name="file" value="${basedir}/gradle/checkstyle/checkstyle-suppressions.xml"/>
+        <property name="file" value="${suppressionFile}"/>
     </module>
 </module>
