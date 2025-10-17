@@ -17,10 +17,10 @@ spotless {
 
 checkstyle {
     toolVersion = "12.0.1"
-    config = resources.text.fromUri("https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/google-overrides.xml")
-    configProperties = [
-            'checkstyle.suppressions.file': 'https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/suppressions.xml'
-    ]
+    config = resources.text.fromUri("https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/google-checks.xml")
+//    configProperties = [
+//            'checkstyle.suppressions.file': 'https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/suppressions.xml'
+//    ]
     ignoreFailures = false
     showViolations = true
 }
