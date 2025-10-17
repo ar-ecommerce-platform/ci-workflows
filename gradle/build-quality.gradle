@@ -22,6 +22,7 @@ checkstyle {
             'checkstyle.suppressions.file': 'https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/suppressions.xml'
     ]
     ignoreFailures = false
+    showViolations = true
 }
 
 // Make `check` run everything in the right order
