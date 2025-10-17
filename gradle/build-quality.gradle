@@ -19,6 +19,9 @@ spotless {
 checkstyle {
     toolVersion = "11.0.1"
     config = file("gradle/checkstyle/google-overrides.xml")
+    configProperties = [
+            "suppressionFile": rootProject.file("gradle/checkstyle/checkstyle-suppressions.xml")
+    ]
     ignoreFailures = false
 }
 
