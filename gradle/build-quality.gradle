@@ -17,9 +17,9 @@ spotless {
 
 checkstyle {
     toolVersion = "12.0.1"
-    configFile = file("${rootDir}/gradle/checkstyle/google-overrides.xml")
+    config = resources.text.fromUri("https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/google-overrides.xml")
     configProperties = [
-            "suppressionFile": file("${rootDir}/gradle/checkstyle/suppressions.xml")
+            'checkstyle.suppressions.file': 'https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/suppressions.xml'
     ]
     ignoreFailures = false
 }
