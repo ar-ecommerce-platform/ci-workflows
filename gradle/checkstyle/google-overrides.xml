@@ -40,8 +40,7 @@
         </module>
     </module>
 
-    <!-- Global suppressions -->
     <module name="SuppressionFilter">
-        <property name="file" value="${suppressionFile}"/>
+        <property name="file" value="https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/checkstyle-suppressions.xml"/>
     </module>
 </module>
