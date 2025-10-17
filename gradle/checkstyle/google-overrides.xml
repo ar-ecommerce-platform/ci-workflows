@@ -6,9 +6,9 @@
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
 
-    <!-- Import Google base config -->
-    <module name="ConfigurationLoader">
-        <property name="file" value="gradle/checkstyle/google_checks.xml"/>
+    <!-- Import Google base config via remote URL -->
+    <module name="ImportControl">
+        <property name="file" value="https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/google_checks.xml"/>
     </module>
 
     <!-- ======== Overrides for Spring / modern Java ======== -->
