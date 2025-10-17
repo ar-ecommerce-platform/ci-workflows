@@ -14,13 +14,12 @@ spotless {
 // ---------------------------
 // Checkstyle
 // ---------------------------
-//def checkstyleConfigUrl = "file://${project.rootDir}/gradle/checkstyle/google-overrides.xml"
 
 checkstyle {
-    toolVersion = "11.0.1"
-    config = resources.text.fromFile("gradle/checkstyle/google-overrides.xml")
+    toolVersion = "12.0.1"
+    configFile = file("${rootDir}/gradle/checkstyle/google-overrides.xml")
     configProperties = [
-            "suppressionFile": rootProject.file("gradle/checkstyle/checkstyle-suppressions.xml")
+            "suppressionFile": file("${rootDir}/gradle/checkstyle/suppressions.xml")
     ]
     ignoreFailures = false
 }
