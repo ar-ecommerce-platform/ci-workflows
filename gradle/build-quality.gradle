@@ -17,7 +17,7 @@ spotless {
 
 checkstyle {
     toolVersion = "12.0.1"
-    config = resources.text.fromUri("https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/google-checks.xml")
+    config = resources.text.fromUri("https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/google_checks.xml")
 //    configProperties = [
 //            'checkstyle.suppressions.file': 'https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/suppressions.xml'
 //    ]
