@@ -6,14 +6,24 @@
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
 
-    <!-- === Import the base Google config (local file) === -->
-    <module name="ConfigurationLoader">
-        <property name="file" value="gradle/checkstyle/google_checks.xml"/>
+    <!-- ============================= -->
+    <!-- Conditional base configuration -->
+    <!-- ============================= -->
+    <!-- Try loading local google_checks.xml (for dev),
+         otherwise fall back to the remote Google config -->
+    <property name="basedir" value="${basedir}"/>
+    <property name="config_loc" value="${basedir}/gradle/checkstyle/google_checks.xml"/>
+    <property name="fallback_config" value="https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml"/>
+
+    <!-- Import base Google rules -->
+    <module name="ImportControl">
+        <property name="file" value="${config_loc}"/>
     </module>
 
-    <!-- Base Google style -->
+    <!-- ======== Overrides for Spring / modern Java ======== -->
     <module name="TreeWalker">
-        <!-- Relax field visibility rules for Spring beans -->
+
+        <!-- Visibility rules (relaxed for Spring DI) -->
         <module name="VisibilityModifier">
             <property name="scope" value="protected"/>
             <property name="allowPublicFinalFields" value="true"/>
@@ -22,15 +32,25 @@
             <property name="ignoreFieldNames" value="serialVersionUID,logger,LOGGER"/>
         </module>
 
-        <!-- Ignore magic numbers for -1, 0, 1 -->
+        <!-- Relax magic number and hashcode -->
         <module name="MagicNumber">
             <property name="ignoreNumbers" value="-1,0,1"/>
             <property name="ignoreHashCodeMethod" value="true"/>
         </module>
+
+        <!-- Optional: consistent braces and spacing -->
+        <module name="NeedBraces"/>
+        <module name="EmptyLineSeparator"/>
+        <module name="LeftCurly">
+            <property name="option" value="eol"/>
+        </module>
+        <module name="RightCurly">
+            <property name="option" value="alone"/>
+        </module>
     </module>
 
-    <!-- Suppressions file -->
+    <!-- Global suppressions (tests, Lombok, generated code) -->
     <module name="SuppressionFilter">
-        <property name="file" value="checkstyle-suppressions.xml"/>
+        <property name="file" value="${basedir}/gradle/checkstyle/checkstyle-suppressions.xml"/>
     </module>
 </module>

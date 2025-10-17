@@ -14,7 +14,7 @@ spotless {
 // ---------------------------
 // Checkstyle
 // ---------------------------
-def checkstyleConfigUrl = "https://raw.githubusercontent.com/ar-ecommerce-platform/ci-workflows/test-checkstyle/gradle/checkstyle/google-overrides.xml"
+def checkstyleConfigUrl = "file://${project.rootDir}/gradle/checkstyle/google-overrides.xml"
 
 checkstyle {
     toolVersion = "11.0.1"
