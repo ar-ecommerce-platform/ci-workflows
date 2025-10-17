@@ -6,18 +6,9 @@
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
 
-    <!-- ============================= -->
-    <!-- Conditional base configuration -->
-    <!-- ============================= -->
-    <!-- Try loading local google_checks.xml (for dev),
-         otherwise fall back to the remote Google config -->
-    <property name="basedir" value="${basedir}"/>
-    <property name="config_loc" value="${basedir}/gradle/checkstyle/google_checks.xml"/>
-    <property name="fallback_config" value="https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml"/>
-
-    <!-- Import base Google rules -->
-    <module name="ImportControl">
-        <property name="file" value="${config_loc}"/>
+    <!-- Import Google base config -->
+    <module name="ConfigurationLoader">
+        <property name="file" value="gradle/checkstyle/google_checks.xml"/>
     </module>
 
     <!-- ======== Overrides for Spring / modern Java ======== -->
